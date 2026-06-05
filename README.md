@@ -49,6 +49,18 @@ U kunt kant-en-klare versies downloaden voor uw systeem:
 - **Linux:** Download `AfvalKalender_linux-x64`, maak het uitvoerbaar (`chmod +x`) en start het met `./AfvalKalender.ConsoleUI`.
 - **macOS:** Download de versie voor Intel (`osx-x64`) of Apple Silicon (`osx-arm64`).
 
+### Installatie via .DEB (Ubuntu/Debian)
+Voor Ubuntu-gebruikers is er een `.deb` pakket beschikbaar:
+1. Download `afvalkalender-twente_1.0.0_amd64.deb` van de releases pagina.
+2. Installeer het pakket:
+   ```bash
+   sudo dpkg -i afvalkalender-twente_1.0.0_amd64.deb
+   ```
+3. U kunt de applicatie nu overal starten met het commando:
+   ```bash
+   afvalkalender
+   ```
+
 ---
 
 ## Architectuur en Design
