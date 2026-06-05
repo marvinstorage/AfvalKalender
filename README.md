@@ -19,7 +19,7 @@ De applicatie automatiseert het proces van het bijhouden van de afvalkalender. I
 ## Gebruik
 
 ### Vereisten
--   .NET 8.0 SDK of hoger.
+-   .NET 10.0 SDK of hoger.
 
 ### Uitvoeren
 1. Clone de repository.
