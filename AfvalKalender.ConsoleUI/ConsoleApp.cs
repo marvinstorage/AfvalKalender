@@ -1,0 +1,47 @@
+using AfvalKalender.Application.Services;
+
+namespace AfvalKalender.ConsoleUI;
+
+public class ConsoleApp
+{
+    private readonly AfvalService _afvalService;
+
+    public ConsoleApp(AfvalService afvalService)
+    {
+        _afvalService = afvalService;
+    }
+
+    public async Task RunAsync()
+    {
+        Console.WriteLine("--- Afvalkalender naar ICS Exporteur ---");
+        
+        Console.Write("Voer uw postcode in (bijv. 1234AB): ");
+        string postcode = Console.ReadLine()?.ToUpper() ?? "";
+        
+        Console.Write("Voer uw huisnummer in: ");
+        string huisnummer = Console.ReadLine() ?? "";
+        
+        Console.Write("Voor welk jaar wilt u de kalender? (bijv. 2026): ");
+        if (!int.TryParse(Console.ReadLine(), out int jaar)) jaar = DateTime.Now.Year;
+        
+        Console.Write("Hoeveel uur van tevoren wilt u een herinnering? (bijv. 13): ");
+        if (!int.TryParse(Console.ReadLine(), out int herinneringUur)) herinneringUur = 13;
+
+        string outputBestand = $"AfvalKalender_{postcode}_{huisnummer}_{jaar}.ics";
+
+        try
+        {
+            Console.WriteLine("\nBezig met ophalen en verwerken van data...");
+            var momenten = await _afvalService.VerwerkKalenderAsync(postcode, huisnummer, jaar, herinneringUur, outputBestand);
+            
+            Console.WriteLine($"\nSucces! Er zijn {momenten.Count()} ophaalmomenten gevonden en opgeslagen.");
+            Console.WriteLine($"Het ICS bestand is aangemaakt: {outputBestand}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"\nEr is een fout opgetreden: {ex.Message}");
+        }
+
+        Console.WriteLine("\nAfsluiten...");
+    }
+}
