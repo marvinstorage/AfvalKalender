@@ -1,6 +1,6 @@
 # Afval Kalender Twente (.NET)
 
-Een moderne C# .NET console applicatie om afvalophaalschema's van Twente Milieu op te halen en te exporteren naar een `.ics` bestand voor gebruik in digitale agenda's zoals Google Calendar of Outlook.
+Een moderne C# .NET console en desktop applicatie om afvalophaalschema's van Twente Milieu op te halen en te exporteren naar een `.ics` bestand voor gebruik in digitale agenda's zoals Google Calendar of Outlook.
 
 ## Doel van de applicatie
 
@@ -15,6 +15,7 @@ De applicatie automatiseert het proces van het bijhouden van de afvalkalender in
 -   **ICS Export:** Genereert een `.ics` bestand voor import in Google Calendar, Outlook, etc.
 -   **Aanpasbare Reminders:** Stel zelf in hoeveel uur van tevoren je een melding wilt krijgen.
 -   **Nederlandstalig:** De interface en kalender-omschrijvingen zijn volledig in het Nederlands.
+-   **Clickable Links:** Directe toegang tot het gegenereerde bestand vanuit de UI.
 
 ## Gebruik
 
@@ -42,12 +43,12 @@ dotnet run --project AfvalKalender.DesktopUI
 U kunt kant-en-klare versies downloaden voor uw systeem:
 
 #### Desktop GUI (Aanbevolen)
-- **Windows:** Download `AfvalKalender_GUI_win-x64.zip`.
-- **Linux (Gnome/Ubuntu):** Download `AfvalKalender_GUI_linux-x64`.
+- **Windows:** Download `AfvalKalender_GUI_v1.1.0_win-x64.exe`.
+- **Linux (Gnome/Ubuntu):** Download `AfvalKalender_GUI_v1.1.0_linux-x64`.
 
 #### Console UI
-- **Windows:** Download `AfvalKalender_win-x64.exe`.
-- **Linux:** Download `AfvalKalender_linux-x64` of installeer via het `.deb` pakket.
+- **Windows:** Download `AfvalKalender_CLI_v1.1.0_win-x64.exe`.
+- **Linux:** Download `AfvalKalender_CLI_v1.1.0_linux-x64` of installeer via het `.deb` pakket.
 
 ---
 
@@ -69,21 +70,86 @@ Voor Ubuntu-gebruikers is er een `.deb` pakket beschikbaar:
 
 De applicatie is opgezet volgens moderne software engineering principes:
 
-### 1. Clean Architecture (Hexagonal)
-Het project is verdeeld in vier lagen om een strikte scheiding van verantwoordelijkheden te garanderen:
+### 1. Visualisatie van de Lagen (Clean Architecture / Hexagonal)
+De onderstaande diagram toont hoe de verschillende onderdelen van de applicatie zich tot elkaar verhouden. De pijlen geven de richting van de afhankelijkheden aan (allemaal naar binnen, richting het domein).
 
--   **Domain:** Bevat de business entiteiten (`Adres`, `AfvalOphaalMoment`) en interfaces. Dit is het hart van de applicatie en heeft geen afhankelijkheden van externe bibliotheken of andere lagen.
--   **Application:** Bevat de orchestration logic (`AfvalService`). Hier wordt bepaald welke stappen nodig zijn om de use case "verwerk kalender" uit te voeren.
--   **Infrastructure:** Bevat de concrete implementaties van externe systemen:
-    -   `TwenteMilieuApi`: De HTTP client voor de API.
-    -   `EfAfvalRepository`: De database implementatie met Entity Framework Core en SQLite.
-    -   `IcsExporter`: De logica voor het genereren van het `.ics` bestand.
--   **ConsoleUI:** De gebruikersinterface die de input verzamelt en de `Application` laag aanstuurt.
+```mermaid
+graph TD
+    subgraph UI [User Interface Lagen]
+        Console[ConsoleUI]
+        Desktop[DesktopUI]
+    end
 
-### 2. Domain Driven Design (DDD) & Event Storming
+    subgraph Application [Application Laag]
+        Service[AfvalService]
+    end
+
+    subgraph Infrastructure [Infrastructure Laag]
+        Api[TwenteMilieuApi]
+        Repo[EfAfvalRepository]
+        Ics[IcsExporter]
+    end
+
+    subgraph Domain [Domain Laag]
+        Entities[Entities: Adres, AfvalOphaalMoment]
+        Interfaces[Interfaces: IAfvalApi, IAfvalRepository, IIcsExporter]
+    end
+
+    Console --> Service
+    Desktop --> Service
+    Service --> Domain
+    Api -- implements --> Interfaces
+    Repo -- implements --> Interfaces
+    Ics -- implements --> Interfaces
+    Infrastructure -. depends on .-> Domain
+```
+
+### 2. Systeem Context (C4 Model)
+Dit diagram laat zien hoe de applicatie samenwerkt met de gebruiker en externe systemen.
+
+```mermaid
+C4Context
+    title System Context diagram voor Afval Kalender Twente
+    Person(user, "Inwoner van Twente", "Wil zijn/haar afvalophaalschema in een digitale agenda hebben.")
+    System(app, "Afval Kalender Twente", "Haalt ophaaldata op en genereert een universeel ICS bestand.")
+    System_Ext(twente, "Twente Milieu API", "De officiële bron voor ophaaldata in de regio Twente.")
+    System_Ext(calendar, "Digitale Agenda", "Google Calendar, Outlook, Apple Calendar, etc.")
+
+    Rel(user, app, "Voert adresgegevens en voorkeuren in")
+    Rel(app, twente, "Haalt actuele data op", "HTTPS/JSON")
+    Rel(app, calendar, "Importeert gegenereerd ICS bestand")
+```
+
+### 3. Procesverloop (Sequence Diagram)
+Hieronder zie je de stappen die de applicatie doorloopt wanneer er op de "Verwerk" knop wordt gedrukt of het commando wordt uitgevoerd.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant UI as Desktop/Console UI
+    participant App as AfvalService
+    participant API as TwenteMilieuApi
+    participant DB as EfAfvalRepository (SQLite)
+    participant ICS as IcsExporter
+
+    User->>UI: Voer Postcode & Huisnummer in
+    UI->>App: VerwerkKalenderAsync(postcode, huisnummer, jaar)
+    App->>API: HaalUniekAdresIdOpAsync(postcode, huisnummer)
+    API-->>App: uniqueAddressID
+    App->>API: HaalKalenderOpAsync(uniqueAddressID, jaar)
+    API-->>App: Lijst van ophaalmomenten
+    App->>DB: SlaOpOfUpdateAsync(momenten)
+    DB-->>App: Database bijgewerkt & LaatstGewijzigd getrackt
+    App->>ICS: ExporteerAsync(momenten, bestandspad)
+    ICS-->>App: ICS bestand aangemaakt (met herinneringen)
+    App-->>UI: Succes melding
+    UI-->>User: Toont clickable link naar ICS bestand
+```
+
+### 4. Domain Driven Design (DDD) & Event Storming
 De structuur is gebaseerd op een duidelijke domeintaal (Ubiquitous Language). Concepten uit de realiteit, zoals "ophaalmomenten", zijn direct terug te vinden in de code. De logica rondom het updaten van ophaalmomenten is ingekapseld in de entiteit zelf (`Update` methode), wat zorgt voor een rijk domeinmodel in plaats van een anemic model.
 
-### 3. Business Logic Details
+### 5. Business Logic Details
 -   **Uniek Adres:** De API vereist eerst een `UniqueId` op basis van postcode en huisnummer voordat de kalender opgehaald kan worden.
 -   **Idempotentie:** Als de applicatie meerdere keren wordt gedraaid voor hetzelfde jaar, zullen bestaande momenten in de database worden bijgewerkt als de omschrijving is veranderd. De kolom `LaatstGewijzigd` houdt bij wanneer dit voor het laatst is gebeurd.
 -   **Reminder Trigger:** De ICS exporter gebruikt een relatieve trigger (`-PTnH`) om herinneringen in te stellen op het exacte aantal uren dat de gebruiker heeft opgegeven.
@@ -93,6 +159,8 @@ De applicatie is ontworpen om zo min mogelijk externe libraries te gebruiken:
 -   `Microsoft.EntityFrameworkCore.Sqlite`: Voor de database (GPL-compatibel).
 -   `Ical.Net`: Voor het genereren van het ICS formaat (MIT - GPL compatibel).
 -   `Newtonsoft.Json`: Voor API verwerking (MIT - GPL compatibel).
+-   `Avalonia`: Voor de cross-platform GUI (MIT).
+-   `CommunityToolkit.Mvvm`: Voor MVVM patronen in de GUI (MIT).
 
 ## Licentie
 Dit project is gelicentieerd onder de **GNU General Public License v3.0 (GPL-3.0)**. Zie het [LICENSE](LICENSE) bestand voor de volledige tekst.
