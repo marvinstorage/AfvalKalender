@@ -19,22 +19,37 @@ De applicatie automatiseert het proces van het bijhouden van de afvalkalender. I
 ## Gebruik
 
 ### Vereisten
--   .NET 10.0 SDK of hoger.
+-   **.NET 10.0 SDK** (als u de broncode zelf wilt compileren).
+-   Geen vereisten als u de **Self-contained executables** gebruikt van de [GitHub Releases](https://github.com/marvinstorage/AfvalKalender/releases) pagina.
 
-### Uitvoeren
+### Uitvoeren vanaf de broncode
 1. Clone de repository.
 2. Navigeer naar de projectmap.
-3. Voer het volgende commando uit:
-   ```bash
-   dotnet run --project AfvalKalender.ConsoleUI
-   ```
-4. Volg de instructies op het scherm:
-    -   Voer je postcode in (bijv. `1234AB`).
-    -   Voer je huisnummer in.
-    -   Voer het gewenste jaar in.
-    -   Stel de herinneringstijd in (in uren vooraf).
+3. Gebruik het passende commando voor uw platform:
 
-Het resultaat is een bestand genaamd `AfvalKalender_POSTCODE_HUISNUMMER_JAAR.ics` in de uitvoermap.
+#### Windows (PowerShell of CMD)
+```powershell
+dotnet run --project AfvalKalender.ConsoleUI
+```
+
+#### Linux (Ubuntu/Debian/etc.)
+```bash
+export PATH=$PATH:$HOME/.dotnet
+dotnet run --project AfvalKalender.ConsoleUI
+```
+
+#### macOS
+```bash
+dotnet run --project AfvalKalender.ConsoleUI
+```
+
+### Self-contained Executables (Zonder .NET installatie)
+U kunt kant-en-klare versies downloaden voor uw systeem:
+- **Windows:** Download `AfvalKalender_win-x64.zip`, pak het uit en start `AfvalKalender.ConsoleUI.exe`.
+- **Linux:** Download `AfvalKalender_linux-x64`, maak het uitvoerbaar (`chmod +x`) en start het met `./AfvalKalender.ConsoleUI`.
+- **macOS:** Download de versie voor Intel (`osx-x64`) of Apple Silicon (`osx-arm64`).
+
+---
 
 ## Architectuur en Design
 
