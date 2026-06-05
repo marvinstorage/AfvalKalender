@@ -52,8 +52,18 @@ public class ConsoleApp
             Console.WriteLine("\nBezig met ophalen en verwerken van data...");
             var momenten = await _afvalService.VerwerkKalenderAsync(postcode, huisnummer, jaar, herinneringUur, outputBestand);
             
+            string absolutePath = Path.GetFullPath(outputBestand);
             Console.WriteLine($"\nSucces! Er zijn {momenten.Count()} ophaalmomenten gevonden en opgeslagen.");
-            Console.WriteLine($"Het ICS bestand is aangemaakt: {outputBestand}");
+            Console.WriteLine("Het ICS bestand is aangemaakt:");
+            
+            // ANSI escape code for clickable link (supported by many modern terminals)
+            Console.Write("\x1b]8;;file://");
+            Console.Write(absolutePath);
+            Console.Write("\x1b\\");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(absolutePath);
+            Console.ResetColor();
+            Console.WriteLine("\x1b]8;;\x1b\\");
         }
         catch (Exception ex)
         {

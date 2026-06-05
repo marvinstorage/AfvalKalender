@@ -73,5 +73,16 @@
                    FontStyle="Italic"
                    HorizontalAlignment="Center"
                    Foreground="{Binding IsBezig, Converter={StaticResource BoolToBrushConverter}}" />
+
+        <Button Command="{Binding OpenBestandCommand}"
+                IsVisible="{Binding HeeftResultaat}"
+                HorizontalAlignment="Center"
+                Classes="link"
+                Margin="0,5,0,0">
+            <TextBlock Text="Open ICS bestand" 
+                       TextDecorations="Underline" 
+                       Foreground="Blue"
+                       Cursor="Hand"/>
+        </Button>
     </StackPanel>
 </Window>

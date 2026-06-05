@@ -29,6 +29,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isBezig = false;
 
+    [ObservableProperty]
+    private string _outputBestandPad = string.Empty;
+
+    [ObservableProperty]
+    private bool _heeftResultaat = false;
+
     public MainWindowViewModel(AfvalService afvalService)
     {
         _afvalService = afvalService;
@@ -41,6 +47,26 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void OpenBestand()
+    {
+        if (string.IsNullOrEmpty(OutputBestandPad)) return;
+        
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = OutputBestandPad,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            StatusBericht = $"Kon bestand niet openen: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     private async Task VerwerkAsync()
     {
         if (string.IsNullOrWhiteSpace(Postcode) || string.IsNullOrWhiteSpace(Huisnummer))
@@ -50,6 +76,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         IsBezig = true;
+        HeeftResultaat = false;
         StatusBericht = "Data ophalen...";
 
         try
@@ -57,7 +84,9 @@ public partial class MainWindowViewModel : ViewModelBase
             string outputBestand = $"AfvalKalender_{Postcode.ToUpper()}_{Huisnummer}_{Jaar}.ics";
             var momenten = await _afvalService.VerwerkKalenderAsync(Postcode.ToUpper(), Huisnummer, Jaar, HerinneringUur, outputBestand);
             
-            StatusBericht = $"Succes! {momenten.Count()} ophaalmomenten geëxporteerd naar {outputBestand}";
+            OutputBestandPad = System.IO.Path.GetFullPath(outputBestand);
+            HeeftResultaat = true;
+            StatusBericht = $"Succes! {momenten.Count()} ophaalmomenten geëxporteerd.";
         }
         catch (Exception ex)
         {
