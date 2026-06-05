@@ -1,0 +1,8 @@
+Package: afvalkalender-twente
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: marvinstorage <marvinstorage@users.noreply.github.com>
+Description: Afval Kalender Twente naar ICS exporteur.
+ Haalt afvalophaalmomenten op van Twente Milieu en exporteert deze naar een ICS bestand.

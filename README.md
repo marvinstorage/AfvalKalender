@@ -22,32 +22,34 @@ De applicatie automatiseert het proces van het bijhouden van de afvalkalender in
 -   **.NET 10.0 SDK** (als u de broncode zelf wilt compileren).
 -   Geen vereisten als u de **Self-contained executables** gebruikt van de [GitHub Releases](https://github.com/marvinstorage/AfvalKalender/releases) pagina.
 
+De applicatie is beschikbaar in twee varianten:
+1.  **Console UI:** Een interactieve tekst-interface.
+2.  **Desktop GUI:** Een grafische interface (Windows & Linux Gnome).
+
 ### Uitvoeren vanaf de broncode
-1. Clone de repository.
-2. Navigeer naar de projectmap.
-3. Gebruik het passende commando voor uw platform:
 
-#### Windows (PowerShell of CMD)
-```powershell
+#### Console UI
+```bash
 dotnet run --project AfvalKalender.ConsoleUI
 ```
 
-#### Linux (Ubuntu/Debian/etc.)
+#### Desktop GUI
 ```bash
-export PATH=$PATH:$HOME/.dotnet
-dotnet run --project AfvalKalender.ConsoleUI
-```
-
-#### macOS
-```bash
-dotnet run --project AfvalKalender.ConsoleUI
+dotnet run --project AfvalKalender.DesktopUI
 ```
 
 ### Self-contained Executables (Zonder .NET installatie)
 U kunt kant-en-klare versies downloaden voor uw systeem:
-- **Windows:** Download `AfvalKalender_win-x64.zip`, pak het uit en start `AfvalKalender.ConsoleUI.exe`.
-- **Linux:** Download `AfvalKalender_linux-x64`, maak het uitvoerbaar (`chmod +x`) en start het met `./AfvalKalender.ConsoleUI`.
-- **macOS:** Download de versie voor Intel (`osx-x64`) of Apple Silicon (`osx-arm64`).
+
+#### Desktop GUI (Aanbevolen)
+- **Windows:** Download `AfvalKalender_GUI_win-x64.zip`.
+- **Linux (Gnome/Ubuntu):** Download `AfvalKalender_GUI_linux-x64`.
+
+#### Console UI
+- **Windows:** Download `AfvalKalender_win-x64.exe`.
+- **Linux:** Download `AfvalKalender_linux-x64` of installeer via het `.deb` pakket.
+
+---
 
 ### Installatie via .DEB (Ubuntu/Debian)
 Voor Ubuntu-gebruikers is er een `.deb` pakket beschikbaar:

@@ -1,0 +1,77 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AfvalKalender.DesktopUI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="550"
+        x:Class="AfvalKalender.DesktopUI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Afval Kalender Twente"
+        Width="450" Height="550"
+        WindowStartupLocation="CenterScreen">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <StackPanel Margin="20" Spacing="15">
+        <Border Background="Red" CornerRadius="10" Padding="15">
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="AFVAL KALENDER TWENTE" 
+                           Foreground="White" 
+                           FontSize="20" 
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="[ TWENTSE ROS ]" 
+                           Foreground="White" 
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Postcode"/>
+            <TextBox Text="{Binding Postcode}" PlaceholderText="bijv. 1234AB"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Huisnummer"/>
+            <TextBox Text="{Binding Huisnummer}" PlaceholderText="bijv. 10"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Jaar"/>
+            <NumericUpDown Value="{Binding Jaar}" Minimum="2020" Maximum="2100"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Herinnering (uren vooraf)"/>
+            <NumericUpDown Value="{Binding HerinneringUur}" Minimum="0" Maximum="48"/>
+        </StackPanel>
+
+        <Button Command="{Binding VerwerkCommand}" 
+                IsEnabled="{Binding !IsBezig}"
+                HorizontalAlignment="Stretch" 
+                HorizontalContentAlignment="Center"
+                Background="Red" 
+                Foreground="White"
+                Height="40">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="Exporteren naar ICS"/>
+                <ProgressBar IsIndeterminate="True" 
+                             Width="20" Height="20" 
+                             IsVisible="{Binding IsBezig}"
+                             VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+
+        <Separator Height="2" Margin="0,10"/>
+
+        <TextBlock Text="{Binding StatusBericht}" 
+                   TextWrapping="Wrap" 
+                   FontStyle="Italic"
+                   HorizontalAlignment="Center"
+                   Foreground="{Binding IsBezig, Converter={StaticResource BoolToBrushConverter}}" />
+    </StackPanel>
+</Window>
