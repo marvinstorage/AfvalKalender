@@ -13,6 +13,24 @@ public class ConsoleApp
 
     public async Task RunAsync()
     {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine(@"
+    _____________________________________________________
+   /                                                     \
+  |                                                       |
+  |     A F V A L   K A L E N D E R   T W E N T E         |
+  |                                                       |
+  |                  _,,/|                                |
+  |                 ""-f  |                                |
+  |                   \  |   [ TWENTSE ROS ]              |
+  |                    \ |                                |
+  |                     \|                                |
+  |                                                       |
+  |          Schoon Twente, Mooi Twente!                  |
+   \_____________________________________________________/
+        ");
+        Console.ResetColor();
+
         Console.WriteLine("--- Afvalkalender naar ICS Exporteur ---");
         
         Console.Write("Voer uw postcode in (bijv. 1234AB): ");

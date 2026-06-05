@@ -1,10 +1,10 @@
-# AfvalKalender .NET
+# Afval Kalender Twente (.NET)
 
 Een moderne C# .NET console applicatie om afvalophaalschema's van Twente Milieu op te halen en te exporteren naar een `.ics` bestand voor gebruik in digitale agenda's zoals Google Calendar of Outlook.
 
 ## Doel van de applicatie
 
-De applicatie automatiseert het proces van het bijhouden van de afvalkalender. In plaats van handmatig data over te nemen of een onhandige PDF te gebruiken, haalt dit programma de actuele data op direct bij de bron (Twente Milieu API), slaat deze op in een lokale database, en genereert een gestandaardiseerd kalenderbestand met instelbare herinneringen.
+De applicatie automatiseert het proces van het bijhouden van de afvalkalender in de regio Twente. In plaats van handmatig data over te nemen of een onhandige PDF te gebruiken, haalt dit programma de actuele data op direct bij de bron (Twente Milieu API), slaat deze op in een lokale database, en genereert een gestandaardiseerd kalenderbestand met instelbare herinneringen.
 
 ## Functionaliteiten
 
