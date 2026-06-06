@@ -1,15 +1,16 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfvalKalender.Application.Services;
+using AfvalKalender.Application.Commands;
+using AfvalKalender.Domain.Entities;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace AfvalKalender.DesktopUI.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    private readonly AfvalService _afvalService;
+    private readonly ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>> _handler;
 
     [ObservableProperty]
     private string _postcode = string.Empty;
@@ -35,22 +36,23 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _heeftResultaat = false;
 
-    public MainWindowViewModel(AfvalService afvalService)
+    public MainWindowViewModel(
+        ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>> handler)
     {
-        _afvalService = afvalService;
+        _handler = handler;
     }
 
-    // Default constructor for previewer
+    // Default constructor for Avalonia previewer
     public MainWindowViewModel()
     {
-        _afvalService = null!;
+        _handler = null!;
     }
 
     [RelayCommand]
     private void OpenBestand()
     {
         if (string.IsNullOrEmpty(OutputBestandPad)) return;
-        
+
         try
         {
             var psi = new System.Diagnostics.ProcessStartInfo
@@ -82,11 +84,12 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             string outputBestand = $"AfvalKalender_{Postcode.ToUpper()}_{Huisnummer}_{Jaar}.ics";
-            var momenten = await _afvalService.VerwerkKalenderAsync(Postcode.ToUpper(), Huisnummer, Jaar, HerinneringUur, outputBestand);
-            
+            var command = new VerwerkKalenderCommand(Postcode.ToUpper(), Huisnummer, Jaar, HerinneringUur, outputBestand);
+            var momenten = await _handler.HandleAsync(command);
+
             OutputBestandPad = System.IO.Path.GetFullPath(outputBestand);
             HeeftResultaat = true;
-            StatusBericht = $"Succes! {momenten.Count()} ophaalmomenten geëxporteerd.";
+            StatusBericht = $"Succes! {momenten.Count} ophaalmomenten geëxporteerd.";
         }
         catch (Exception ex)
         {

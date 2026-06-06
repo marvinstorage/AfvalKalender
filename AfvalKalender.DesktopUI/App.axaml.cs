@@ -4,7 +4,8 @@ using Avalonia.Markup.Xaml;
 using AfvalKalender.DesktopUI.ViewModels;
 using AfvalKalender.DesktopUI.Views;
 using Microsoft.Extensions.DependencyInjection;
-using AfvalKalender.Application.Services;
+using AfvalKalender.Application.Commands;
+using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
 using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
@@ -12,6 +13,7 @@ using AfvalKalender.Infrastructure.Ics;
 using AfvalKalender.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 
 namespace AfvalKalender.DesktopUI;
 
@@ -66,7 +68,9 @@ public partial class App : Avalonia.Application
         services.AddScoped<IIcsExporter, IcsExporter>();
 
         // Application
-        services.AddScoped<AfvalService>();
+        services.AddScoped<
+            ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>,
+            VerwerkKalenderCommandHandler>();
 
         // ViewModel
         services.AddTransient<MainWindowViewModel>();

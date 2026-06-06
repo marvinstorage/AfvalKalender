@@ -1,5 +1,6 @@
-using AfvalKalender.Application.Services;
+using AfvalKalender.Application.Commands;
 using AfvalKalender.ConsoleUI;
+using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
 using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
@@ -27,7 +28,9 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddScoped<IIcsExporter, IcsExporter>();
 
         // Application
-        services.AddScoped<AfvalService>();
+        services.AddScoped<
+            ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>,
+            VerwerkKalenderCommandHandler>();
 
         // UI
         services.AddScoped<ConsoleApp>();

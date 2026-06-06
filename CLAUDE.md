@@ -34,9 +34,9 @@ Hexagonal / Clean Architecture with Dutch-language domain (Twente municipality w
 **Dependency flow:** `ConsoleUI` / `DesktopUI` → `Application` → `Domain` ← `Infrastructure`
 
 - **Domain** — Zero NuGet dependencies. Pure C# types: entities, value objects, enums, and the three outbound port interfaces (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`).
-- **Application** — `AfvalService` orchestrates the full fetch/persist/export workflow. Houses inbound and outbound port interfaces.
-- **Infrastructure** — Driven adapters: `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net).
-- **Presentation** — `ConsoleUI` (ANSI terminal, `Microsoft.Extensions.Hosting`) and `DesktopUI` (Avalonia, `CommunityToolkit.Mvvm` source generators). Both layers own DI wiring.
+- **Application** — Light CQRS. `ICommandHandler<TCommand, TResult>` is the inbound port contract. `VerwerkKalenderCommand` (record) carries input; `VerwerkKalenderCommandHandler` orchestrates the full fetch/persist/export workflow by calling the outbound ports.
+- **Infrastructure** — Driven adapters: `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24 h file cache decorator on `IAfvalApi`).
+- **Presentation** — `ConsoleUI` (ANSI terminal, `Microsoft.Extensions.Hosting`) and `DesktopUI` (Avalonia, `CommunityToolkit.Mvvm` source generators). Both layers depend on `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>` only — no direct coupling to Application internals.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -54,13 +54,26 @@ Hexagonal / Clean Architecture with Dutch-language domain (Twente municipality w
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Core workflow (`AfvalService.VerwerkKalenderAsync`)
+### Commands pattern
 
-1. `TwenteMilieuApi.HaalUniekAdresIdOpAsync` → POST `/api/FetchAdress` → returns `UniqueId`
-2. `TwenteMilieuApi.HaalKalenderOpAsync` → POST `/api/GetCalendar` → returns `List<AfvalOphaalMoment>`
-3. `EfAfvalRepository.SlaOpOfUpdateAsync` → upsert into `afvalkalender.db` (local SQLite file); tracks `LaatstGewijzigd` on change
-4. Re-fetch from DB for consistency
-5. `IcsExporter.ExporteerAsync` → writes `AfvalKalender_{postcode}_{huisnummer}_{year}.ics`
+```
+ICommandHandler<TCommand, TResult>          ← inbound port (Application/Commands/)
+VerwerkKalenderCommand                      ← immutable record; input only, no behaviour
+VerwerkKalenderCommandHandler               ← orchestrator; calls outbound ports
+```
+
+Both UIs resolve `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>` from DI.
+Adding a new use case = new `record` + new `Handler` class + one DI line. No other files change.
+Cross-cutting concerns (logging, timing, validation) attach as handler decorators wrapping the interface.
+
+### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
+
+1. Receives `VerwerkKalenderCommand` with postcode, huisnummer, jaar, herinneringUur, outputPad
+2. `TwenteMilieuApi.HaalUniekAdresIdOpAsync` → POST `/api/FetchAdress` → returns `UniqueId`
+3. `TwenteMilieuApi.HaalKalenderOpAsync` → POST `/api/GetCalendar` → returns `List<AfvalOphaalMoment>`
+4. `EfAfvalRepository.SlaOpOfUpdateAsync` → upsert into `afvalkalender.db` (local SQLite file); tracks `LaatstGewijzigd` on change
+5. Re-fetch from DB for consistency
+6. `IcsExporter.ExporteerAsync` → writes `AfvalKalender_{postcode}_{huisnummer}_{year}.ics`
 
 ### Key design decisions
 
@@ -110,4 +123,26 @@ Order of preference:
 - **Frameworks**: xUnit · FluentAssertions · Moq · EF Core InMemory (repo tests) · Avalonia.Headless.XUnit (VM tests)
 - **Test name format**: `Method_Scenario_ExpectedResult` in Dutch (e.g., `Constructor_MetGeldigeData_ZouAdresMoetenAanmaken`)
 - **Mocking**: mock outbound ports (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`) via Moq; never mock domain entities
-- **Repository tests** use EF Core InMemory; **ViewModel tests** use `Avalonia.Headless` with mocked `IAfvalService`
+- **Repository tests** use EF Core InMemory; **ViewModel tests** use `Avalonia.Headless` with a mocked `ICommandHandler<,>`
+- **Handler tests** mock the three outbound ports (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`) and test the handler directly
+
+## Architecture Decision Records
+
+### ADR-001 — Light CQRS via hand-rolled ICommandHandler
+
+**Status:** Accepted
+
+**Context:** Both `ConsoleUI` and `DesktopUI` needed to trigger the same orchestration logic (fetch → persist → export). They were both coupled to the concrete `AfvalService` class, making it impossible to swap or decorate the workflow without touching both UIs.
+
+**Decision:** Introduce a minimal, hand-rolled CQRS pattern:
+- `ICommandHandler<TCommand, TResult>` as the inbound port contract (no MediatR)
+- `VerwerkKalenderCommand` record as the input value object
+- `VerwerkKalenderCommandHandler` as the single orchestrator, replacing `AfvalService`
+
+Both UIs depend only on the interface. The handler is registered in DI.
+
+**Consequences:**
+- Adding a new use case requires only a new `record` + new `Handler` + one DI registration
+- Cross-cutting concerns (logging, caching, validation) can be added as handler decorators without touching either UI or the handler itself
+- Handler is straightforward to test in isolation — mock the three outbound ports, call `HandleAsync`
+- No MediatR dependency; the pattern fits in ~30 lines of framework code

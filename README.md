@@ -82,7 +82,9 @@ graph TD
     end
 
     subgraph Application [Application Laag]
-        Service[AfvalService]
+        Handler[VerwerkKalenderCommandHandler]
+        Command[VerwerkKalenderCommand]
+        IHandler[ICommandHandler&lt;TCommand, TResult&gt;]
     end
 
     subgraph Infrastructure [Infrastructure Laag]
@@ -97,9 +99,10 @@ graph TD
         Interfaces[Interfaces: IAfvalApi, IAfvalRepository, IIcsExporter]
     end
 
-    Console --> Service
-    Desktop --> Service
-    Service --> Domain
+    Console -- ICommandHandler --> Handler
+    Desktop -- ICommandHandler --> Handler
+    Command -. gebruikt door .-> Handler
+    Handler --> Domain
     Cache -- implements --> Interfaces
     Cache -- wraps --> Api
     Repo -- implements --> Interfaces
@@ -130,14 +133,14 @@ Hieronder zie je de stappen die de applicatie doorloopt wanneer er op de "Verwer
 sequenceDiagram
     actor User
     participant UI as Desktop/Console UI
-    participant App as AfvalService
+    participant App as VerwerkKalenderCommandHandler
     participant Cache as CacherendeAfvalApi
     participant API as TwenteMilieuApi
     participant DB as EfAfvalRepository (SQLite)
     participant ICS as IcsExporter
 
     User->>UI: Voer Postcode & Huisnummer in
-    UI->>App: VerwerkKalenderAsync(postcode, huisnummer, jaar)
+    UI->>App: HandleAsync(VerwerkKalenderCommand)
     App->>Cache: HaalUniekAdresIdOpAsync(postcode, huisnummer)
     alt Cache geldig (minder dan 24 uur oud)
         Cache-->>App: UniqueId (uit cache)
