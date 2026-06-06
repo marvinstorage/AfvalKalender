@@ -12,7 +12,7 @@ public class TwenteMilieuApi : IAfvalApi
 {
     private readonly HttpClient _httpClient;
     private const string CompanyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4";
-    private const string BaseUrl = "https://wasteapi.2go-mobile.com/api/";
+    private const string BaseUrl = "https://wasteapi.ximmio.com/api/";
 
     public TwenteMilieuApi(HttpClient httpClient)
     {
