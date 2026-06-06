@@ -1,15 +1,16 @@
-# Afval Kalender Twente (.NET)
+# Afval Kalender (.NET)
 
-Een moderne C# .NET console en desktop applicatie om afvalophaalschema's van Twente Milieu op te halen en te exporteren naar een `.ics` bestand voor gebruik in digitale agenda's zoals Google Calendar of Outlook.
+Een moderne C# .NET console en desktop applicatie om afvalophaalschema's op te halen bij Nederlandse afvalverwerkers en te exporteren naar een `.ics` bestand voor gebruik in digitale agenda's zoals Google Calendar of Outlook.
 
 ## Doel van de applicatie
 
-De applicatie automatiseert het proces van het bijhouden van de afvalkalender in de regio Twente. In plaats van handmatig data over te nemen of een onhandige PDF te gebruiken, haalt dit programma de actuele data op direct bij de bron (Twente Milieu API), slaat deze op in een lokale database, en genereert een gestandaardiseerd kalenderbestand met instelbare herinneringen.
+De applicatie automatiseert het proces van het bijhouden van de afvalkalender. In plaats van handmatig data over te nemen of een onhandige PDF te gebruiken, haalt dit programma de actuele data op direct bij de bron (Ximmio afvalverwerker API), slaat deze op in een lokale database, en genereert een gestandaardiseerd kalenderbestand met instelbare herinneringen. De applicatie ondersteunt meerdere afvalverwerkers in Nederland die gebruik maken van de Ximmio API.
 
 ## Functionaliteiten
 
+-   **Meerdere afvalverwerkers:** Kies uit 16 ondersteunde afvalverwerkers in Nederland (Twente Milieu, ACV, Almere, Avalex, Avri, en meer).
 -   **Postcode & Huisnummer:** Voer je eigen adresgegevens in.
--   **API Integratie:** Haalt data op via de Twente Milieu API.
+-   **API Integratie:** Haalt data op via de Ximmio afvalverwerker API.
 -   **Lokale Database:** Slaat ophaalmomenten op in een SQLite database.
 -   **Update Logica:** Herkent wijzigingen in het ophaalschema en werkt deze bij, inclusief een tijdstempel van de laatste wijziging.
 -   **ICS Export:** Genereert een `.ics` bestand voor import in Google Calendar, Outlook, etc.
@@ -115,14 +116,14 @@ Dit diagram laat zien hoe de applicatie samenwerkt met de gebruiker en externe s
 
 ```mermaid
 C4Context
-    title System Context diagram voor Afval Kalender Twente
-    Person(user, "Inwoner van Twente", "Wil zijn/haar afvalophaalschema in een digitale agenda hebben.")
-    System(app, "Afval Kalender Twente", "Haalt ophaaldata op en genereert een universeel ICS bestand.")
-    System_Ext(twente, "Twente Milieu API", "De officiële bron voor ophaaldata in de regio Twente.")
+    title System Context diagram voor Afval Kalender
+    Person(user, "Inwoner van Nederland", "Wil zijn/haar afvalophaalschema in een digitale agenda hebben.")
+    System(app, "Afval Kalender", "Haalt ophaaldata op bij de gekozen afvalverwerker en genereert een universeel ICS bestand.")
+    System_Ext(ximmio, "Ximmio API (wasteapi.ximmio.com)", "Gedeeld API-platform voor meerdere Nederlandse afvalverwerkers.")
     System_Ext(calendar, "Digitale Agenda", "Google Calendar, Outlook, Apple Calendar, etc.")
 
-    Rel(user, app, "Voert adresgegevens en voorkeuren in")
-    Rel(app, twente, "Haalt actuele data op", "HTTPS/JSON")
+    Rel(user, app, "Kiest afvalverwerker, voert adresgegevens en voorkeuren in")
+    Rel(app, ximmio, "Haalt actuele data op met companyCode per verwerker", "HTTPS/JSON")
     Rel(app, calendar, "Importeert gegenereerd ICS bestand")
 ```
 
@@ -139,21 +140,21 @@ sequenceDiagram
     participant DB as EfAfvalRepository (SQLite)
     participant ICS as IcsExporter
 
-    User->>UI: Voer Postcode & Huisnummer in
-    UI->>App: HandleAsync(VerwerkKalenderCommand)
-    App->>Cache: HaalUniekAdresIdOpAsync(postcode, huisnummer)
+    User->>UI: Kies afvalverwerker, voer Postcode & Huisnummer in
+    UI->>App: HandleAsync(VerwerkKalenderCommand met companyCode)
+    App->>Cache: HaalUniekAdresIdOpAsync(postcode, huisnummer, companyCode)
     alt Cache geldig (minder dan 24 uur oud)
         Cache-->>App: UniqueId (uit cache)
     else Cache verlopen of afwezig
-        Cache->>API: HaalUniekAdresIdOpAsync(postcode, huisnummer)
+        Cache->>API: HaalUniekAdresIdOpAsync(postcode, huisnummer, companyCode)
         API-->>Cache: UniqueId
         Cache-->>App: UniqueId (opgeslagen in cache)
     end
-    App->>Cache: HaalKalenderOpAsync(UniqueId, jaar)
+    App->>Cache: HaalKalenderOpAsync(UniqueId, jaar, companyCode)
     alt Cache geldig (minder dan 24 uur oud)
         Cache-->>App: Lijst van ophaalmomenten (uit cache)
     else Cache verlopen of afwezig
-        Cache->>API: HaalKalenderOpAsync(UniqueId, jaar)
+        Cache->>API: HaalKalenderOpAsync(UniqueId, jaar, companyCode)
         API-->>Cache: Lijst van ophaalmomenten
         Cache-->>App: Lijst van ophaalmomenten (opgeslagen in cache)
     end
@@ -169,10 +170,12 @@ sequenceDiagram
 De structuur is gebaseerd op een duidelijke domeintaal (Ubiquitous Language). Concepten uit de realiteit, zoals "ophaalmomenten", zijn direct terug te vinden in de code. De logica rondom het updaten van ophaalmomenten is ingekapseld in de entiteit zelf (`Update` methode), wat zorgt voor een rijk domeinmodel in plaats van een anemic model.
 
 ### 5. Business Logic Details
--   **Uniek Adres:** De API vereist eerst een `UniqueId` op basis van postcode en huisnummer voordat de kalender opgehaald kan worden.
+-   **Afvalverwerker selectie:** De gebruiker kiest een verwerker uit `AfvalVerwerkers.Alle` (value object in het domein). De bijbehorende `CompanyCode` (een UUID) wordt meegegeven in `VerwerkKalenderCommand` en doorgegeven aan alle Ximmio API-aanroepen. Alle ondersteunde verwerkers gebruiken hetzelfde JSON-formaat.
+-   **Postcode normalisatie:** Spaties in de postcode worden automatisch verwijderd in beide UIs vóór het aanmaken van het commando (`"1234 AB"` → `"1234AB"`). De Ximmio API accepteert geen postcodes met spaties.
+-   **Uniek Adres:** De API vereist eerst een `UniqueId` op basis van postcode, huisnummer en `companyCode` voordat de kalender opgehaald kan worden. Als het adres niet gevonden wordt, geeft de applicatie een duidelijke foutmelding dat het adres mogelijk buiten het servicegebied van de geselecteerde verwerker valt.
 -   **Idempotentie:** Als de applicatie meerdere keren wordt gedraaid voor hetzelfde jaar, zullen bestaande momenten in de database worden bijgewerkt als de omschrijving is veranderd. De kolom `LaatstGewijzigd` houdt bij wanneer dit voor het laatst is gebeurd.
 -   **Reminder Trigger:** De ICS exporter gebruikt een relatieve trigger (`-PTnH`) om herinneringen in te stellen op het exacte aantal uren dat de gebruiker heeft opgegeven.
--   **API Cache:** `CacherendeAfvalApi` slaat zowel het adres-ID als de kalenderdata op als JSON-bestanden in de map `apicache/`, elk met een tijdstempel. De cache is 24 uur geldig. Bij een beschadigd of verlopen cachebestand valt de applicatie stil terug op een verse API-aanroep. Er worden geen extra NuGet-pakketten gebruikt; de serialisatie verloopt via `System.Text.Json` (BCL).
+-   **API Cache:** `CacherendeAfvalApi` slaat zowel het adres-ID als de kalenderdata op als JSON-bestanden in de map `apicache/`, elk met een tijdstempel. De `companyCode` maakt deel uit van de bestandsnaam zodat cache-entries per verwerker worden gescheiden. De cache is 24 uur geldig. Bij een beschadigd of verlopen cachebestand valt de applicatie stil terug op een verse API-aanroep. Er worden geen extra NuGet-pakketten gebruikt; de serialisatie verloopt via `System.Text.Json` (BCL).
 
 ## Minimale Afhankelijkheden
 De applicatie is ontworpen om zo min mogelijk externe libraries te gebruiken:

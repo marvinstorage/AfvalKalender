@@ -1,5 +1,6 @@
 using AfvalKalender.Application.Commands;
 using AfvalKalender.Domain.Entities;
+using AfvalKalender.Domain.ValueObjects;
 
 namespace AfvalKalender.ConsoleUI;
 
@@ -14,28 +15,44 @@ public class ConsoleApp
 
     public async Task RunAsync()
     {
-        Console.ForegroundColor = ConsoleColor.Red;
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine(@"
     _____________________________________________________
    /                                                     \
   |                                                       |
-  |     A F V A L   K A L E N D E R   T W E N T E         |
+  |         A F V A L   K A L E N D E R                   |
+  |               E X P O R T E U R                       |
   |                                                       |
   |                  _,,/|                                |
   |                 ""-f  |                                |
-  |                   \  |   [ TWENTSE ROS ]              |
+  |                   \  |   [ GENERIC XIMMIO ]           |
   |                    \ |                                |
   |                     \|                                |
   |                                                       |
-  |          Schoon Twente, Mooi Twente!                  |
+  |         Schoon en Duurzaam Nederland!                 |
    \_____________________________________________________/
         ");
         Console.ResetColor();
 
         Console.WriteLine("--- Afvalkalender naar ICS Exporteur ---");
 
+        Console.WriteLine("\nSelecteer uw afvalverwerker:");
+        var verwerkers = AfvalVerwerkers.Alle;
+        for (int i = 0; i < verwerkers.Count; i++)
+        {
+            Console.WriteLine($"{i + 1,2}. {verwerkers[i].Naam}");
+        }
+        Console.Write($"Kies afvalverwerker (1-{verwerkers.Count}) [1]: ");
+        string keuzeInput = Console.ReadLine() ?? "";
+        if (!int.TryParse(keuzeInput, out int keuzeIndex) || keuzeIndex < 1 || keuzeIndex > verwerkers.Count)
+        {
+            keuzeIndex = 1;
+        }
+        var geselecteerdeVerwerker = verwerkers[keuzeIndex - 1];
+        Console.WriteLine($"Geselecteerd: {geselecteerdeVerwerker.Naam}\n");
+
         Console.Write("Voer uw postcode in (bijv. 1234AB): ");
-        string postcode = Console.ReadLine()?.ToUpper() ?? "";
+        string postcode = (Console.ReadLine()?.ToUpper() ?? "").Replace(" ", "");
 
         Console.Write("Voer uw huisnummer in: ");
         string huisnummer = Console.ReadLine() ?? "";
@@ -51,7 +68,7 @@ public class ConsoleApp
         try
         {
             Console.WriteLine("\nBezig met ophalen en verwerken van data...");
-            var command = new VerwerkKalenderCommand(postcode, huisnummer, jaar, herinneringUur, outputBestand);
+            var command = new VerwerkKalenderCommand(postcode, huisnummer, jaar, herinneringUur, outputBestand, geselecteerdeVerwerker.CompanyCode);
             var momenten = await _handler.HandleAsync(command);
 
             string absolutePath = Path.GetFullPath(outputBestand);

@@ -11,7 +11,6 @@ namespace AfvalKalender.Infrastructure.Api;
 public class TwenteMilieuApi : IAfvalApi
 {
     private readonly HttpClient _httpClient;
-    private const string CompanyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4";
     private const string BaseUrl = "https://wasteapi.ximmio.com/api/";
 
     public TwenteMilieuApi(HttpClient httpClient)
@@ -20,11 +19,11 @@ public class TwenteMilieuApi : IAfvalApi
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36");
     }
 
-    public async Task<string> HaalUniekAdresIdOpAsync(string postcode, string huisnummer)
+    public async Task<string> HaalUniekAdresIdOpAsync(string postcode, string huisnummer, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4")
     {
         var requestBody = new
         {
-            companyCode = CompanyCode,
+            companyCode = companyCode,
             postCode = postcode,
             houseNumber = huisnummer
         };
@@ -35,20 +34,21 @@ public class TwenteMilieuApi : IAfvalApi
 
         var json = await response.Content.ReadAsStringAsync();
         var data = JsonConvert.DeserializeObject<JObject>(json);
-        
-        var uniekId = data?["dataList"]?[0]?["UniqueId"]?.ToString();
-        
+        var dataList = data?["dataList"] as JArray;
+
+        var uniekId = dataList?.Count > 0 ? dataList[0]?["UniqueId"]?.ToString() : null;
+
         if (string.IsNullOrEmpty(uniekId))
-            throw new Exception("Kon geen uniek adres ID vinden voor dit adres.");
+            throw new Exception("Kon geen uniek adres ID vinden voor dit adres. Controleer of de geselecteerde afvalverwerker uw adres bedient.");
 
         return uniekId;
     }
 
-    public async Task<IEnumerable<AfvalOphaalMoment>> HaalKalenderOpAsync(string uniekAdresId, string postcode, string huisnummer, int jaar)
+    public async Task<IEnumerable<AfvalOphaalMoment>> HaalKalenderOpAsync(string uniekAdresId, string postcode, string huisnummer, int jaar, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4")
     {
         var requestBody = new
         {
-            companyCode = CompanyCode,
+            companyCode = companyCode,
             uniqueAddressID = uniekAdresId,
             startDate = $"{jaar}-01-01",
             endDate = $"{jaar}-12-31"
@@ -105,7 +105,7 @@ public class TwenteMilieuApi : IAfvalApi
 
     private AfvalType MapAfvalType(string type)
     {
-        return type switch
+        return type.ToUpperInvariant() switch
         {
             "GREY" => AfvalType.GRIJS,
             "GREEN" => AfvalType.GROEN,

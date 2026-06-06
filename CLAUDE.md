@@ -29,11 +29,11 @@ dotnet publish -c Release -r linux-x64 --self-contained
 
 ## Architecture & Layer Rules
 
-Hexagonal / Clean Architecture with Dutch-language domain (Twente municipality waste collection calendar app).
+Hexagonal / Clean Architecture with Dutch-language domain (multi-provider Dutch waste collection calendar app via the Ximmio API).
 
 **Dependency flow:** `ConsoleUI` / `DesktopUI` → `Application` → `Domain` ← `Infrastructure`
 
-- **Domain** — Zero NuGet dependencies. Pure C# types: entities, value objects, enums, and the three outbound port interfaces (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`).
+- **Domain** — Zero NuGet dependencies. Pure C# types: entities, value objects, enums, and the three outbound port interfaces (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`). `AfvalVerwerker` (value object) and `AfvalVerwerkers.Alle` (static registry) live here — 16 supported Dutch providers with their Ximmio `CompanyCode`.
 - **Application** — Light CQRS. `ICommandHandler<TCommand, TResult>` is the inbound port contract. `VerwerkKalenderCommand` (record) carries input; `VerwerkKalenderCommandHandler` orchestrates the full fetch/persist/export workflow by calling the outbound ports.
 - **Infrastructure** — Driven adapters: `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24 h file cache decorator on `IAfvalApi`).
 - **Presentation** — `ConsoleUI` (ANSI terminal, `Microsoft.Extensions.Hosting`) and `DesktopUI` (Avalonia, `CommunityToolkit.Mvvm` source generators). Both layers depend on `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>` only — no direct coupling to Application internals.
@@ -44,10 +44,10 @@ Hexagonal / Clean Architecture with Dutch-language domain (Twente municipality w
 │  ConsoleUI (ANSI) · DesktopUI (Avalonia)                │
 ├─────────────────────────────────────────────────────────┤
 │  Application  (Core)                                    │
-│  AfvalService · Inbound ports · Outbound ports          │
+│  VerwerkKalenderCommand · CommandHandler · Ports        │
 ├─────────────────────────────────────────────────────────┤
 │  Domain  (Core — ZERO external dependencies)            │
-│  Adres · AfvalOphaalMoment · AfvalType                  │
+│  Adres · AfvalOphaalMoment · AfvalType · AfvalVerwerker │
 ├─────────────────────────────────────────────────────────┤
 │  Infrastructure  (Driven Adapters)                      │
 │  TwenteMilieuApi · EfAfvalRepository · IcsExporter      │
@@ -68,9 +68,9 @@ Cross-cutting concerns (logging, timing, validation) attach as handler decorator
 
 ### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
 
-1. Receives `VerwerkKalenderCommand` with postcode, huisnummer, jaar, herinneringUur, outputPad
-2. `TwenteMilieuApi.HaalUniekAdresIdOpAsync` → POST `/api/FetchAdress` → returns `UniqueId`
-3. `TwenteMilieuApi.HaalKalenderOpAsync` → POST `/api/GetCalendar` → returns `List<AfvalOphaalMoment>`
+1. Receives `VerwerkKalenderCommand` with postcode, huisnummer, jaar, herinneringUur, outputPad, companyCode
+2. `TwenteMilieuApi.HaalUniekAdresIdOpAsync(postcode, huisnummer, companyCode)` → POST `/api/FetchAdress` → returns `UniqueId`
+3. `TwenteMilieuApi.HaalKalenderOpAsync(uniqueId, postcode, huisnummer, jaar, companyCode)` → POST `/api/GetCalendar` → returns `List<AfvalOphaalMoment>`
 4. `EfAfvalRepository.SlaOpOfUpdateAsync` → upsert into `afvalkalender.db` (local SQLite file); tracks `LaatstGewijzigd` on change
 5. Re-fetch from DB for consistency
 6. `IcsExporter.ExporteerAsync` → writes `AfvalKalender_{postcode}_{huisnummer}_{year}.ics`
@@ -78,7 +78,10 @@ Cross-cutting concerns (logging, timing, validation) attach as handler decorator
 ### Key design decisions
 
 - **No EF migrations** — schema created via `EnsureCreated()` on first run; `afvalkalender.db` lives next to the executable.
-- **SSL validation disabled** for the Twente Milieu API `HttpClient` (API uses a self-signed cert).
+- **SSL validation disabled** for the Ximmio `HttpClient` (API uses a self-signed cert).
+- **Multi-provider via companyCode** — `AfvalVerwerker` value object in the Domain holds the provider's UUID. The UI populates a picker from `AfvalVerwerkers.Alle`; the selected `CompanyCode` travels through `VerwerkKalenderCommand` to every `IAfvalApi` call. Cache filenames include the `companyCode` so entries are scoped per provider.
+- **Postcode normalisation** — both UIs strip spaces before building the command (`"1234 AB"` → `"1234AB"`). The Ximmio API rejects postcodes with spaces silently (returns empty `dataList`).
+- **Empty dataList guard** — `TwenteMilieuApi.HaalUniekAdresIdOpAsync` checks `dataList?.Count > 0` before indexing; an empty result throws a user-friendly exception rather than `ArgumentOutOfRangeException`.
 - **Idempotent upserts** — re-running with the same address updates only records whose `Omschrijving` changed.
 - **ICS UIDs** are scoped per `type + date + postcode` to prevent duplicate calendar entries on reimport.
 - **MVVM source generators** — `[ObservableProperty]` and `[RelayCommand]` on `MainWindowViewModel` generate boilerplate at compile time; do not write manual `INotifyPropertyChanged` code.

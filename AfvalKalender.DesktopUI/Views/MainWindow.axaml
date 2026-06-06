@@ -3,12 +3,13 @@
         xmlns:vm="using:AfvalKalender.DesktopUI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:domain="using:AfvalKalender.Domain.ValueObjects"
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="550"
         x:Class="AfvalKalender.DesktopUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Afval Kalender Twente"
-        Width="450" Height="550"
+        Title="Afval Kalender"
+        Width="450" Height="600"
         WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
@@ -18,17 +19,30 @@
     <StackPanel Margin="20" Spacing="15">
         <Border Background="Red" CornerRadius="10" Padding="15">
             <StackPanel HorizontalAlignment="Center">
-                <TextBlock Text="AFVAL KALENDER TWENTE" 
-                           Foreground="White" 
-                           FontSize="20" 
+                <TextBlock Text="AFVAL KALENDER"
+                           Foreground="White"
+                           FontSize="20"
                            FontWeight="Bold"
                            HorizontalAlignment="Center"/>
-                <TextBlock Text="[ TWENTSE ROS ]" 
-                           Foreground="White" 
+                <TextBlock Text="[ XIMMIO AFVALVERWERKERS ]"
+                           Foreground="White"
                            HorizontalAlignment="Center"
                            Margin="0,5,0,0"/>
             </StackPanel>
         </Border>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Afvalverwerker"/>
+            <ComboBox ItemsSource="{Binding AfvalVerwerkers}"
+                      SelectedItem="{Binding GeselecteerdeVerwerker}"
+                      HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:AfvalVerwerker">
+                        <TextBlock Text="{Binding Naam}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
 
         <StackPanel Spacing="5">
             <TextBlock Text="Postcode"/>
