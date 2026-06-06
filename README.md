@@ -103,8 +103,8 @@ graph TD
 
     Console -- ICommandHandler --> Handler
     Desktop -- ICommandHandler --> Handler
-    Console -. AfvalVerwerkers.Alle .-> ValueObjects
-    Desktop -. AfvalVerwerkers.Alle .-> ValueObjects
+    Console -. "AfvalVerwerkers.Alle" .-> ValueObjects
+    Desktop -. "AfvalVerwerkers.Alle" .-> ValueObjects
     Command -. gebruikt door .-> Handler
     Handler --> Domain
     Cache -- implements --> Interfaces
