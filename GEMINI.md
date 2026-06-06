@@ -29,61 +29,63 @@ dotnet publish -c Release -r linux-x64 --self-contained
 
 ## Architecture & Layer Rules
 
-Hexagonal / Clean Architecture with Dutch-language domain (Twente municipality waste collection calendar app).
+The project follows **Hexagonal / Clean Architecture** principles, ensuring that the core business logic (Domain & Application) is isolated from external concerns like UIs, databases, and APIs.
 
-**Dependency flow:** `ConsoleUI` / `DesktopUI` → `Application` → `Domain` ← `Infrastructure`
+**Dependency flow:** `Presentation` → `Application` → `Domain` ← `Infrastructure`
 
-- **Domain** — Zero NuGet dependencies. Pure C# types: entities, value objects, enums, and the three outbound port interfaces (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`).
-- **Application** — Light CQRS. `ICommandHandler<TCommand, TResult>` is the inbound port contract. `VerwerkKalenderCommand` (record) carries input; `VerwerkKalenderCommandHandler` orchestrates the full fetch/persist/export workflow by calling the outbound ports.
-- **Infrastructure** — Driven adapters: `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24 h file cache decorator on `IAfvalApi`).
-- **Presentation** — `ConsoleUI` (ANSI terminal, `Microsoft.Extensions.Hosting`) and `DesktopUI` (Avalonia, `CommunityToolkit.Mvvm` source generators). Both layers depend on `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>` only — no direct coupling to Application internals.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Presentation  (Driving Adapter)                        │
-│  ConsoleUI (ANSI) · DesktopUI (Avalonia)                │
-├─────────────────────────────────────────────────────────┤
-│  Application  (Core)                                    │
-│  AfvalService · Inbound ports · Outbound ports          │
-├─────────────────────────────────────────────────────────┤
-│  Domain  (Core — ZERO external dependencies)            │
-│  Adres · AfvalOphaalMoment · AfvalType                  │
-├─────────────────────────────────────────────────────────┤
-│  Infrastructure  (Driven Adapters)                      │
-│  TwenteMilieuApi · EfAfvalRepository · IcsExporter      │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Commands pattern
+- **Domain** (Core) — Contains business entities (`Adres`, `AfvalOphaalMoment`), value objects (`AfvalType`, `AfvalVerwerker`), and the **outbound port interfaces** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`). Zero NuGet dependencies.
+- **Application** (Core) — Implements use-case orchestration. Defines the **inbound port** (`ICommandHandler<TCommand, TResult>`) and its implementation (`VerwerkKalenderCommandHandler`). Orchestrates the workflow by calling outbound ports.
+- **Infrastructure** (Driven Adapters) — Concrete implementations of the outbound ports. Includes `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), and `CacherendeAfvalApi` (24h file-based cache decorator).
+- **Presentation** (Driving Adapters) — Entry points: `ConsoleUI` (ANSI/CLI), `DesktopUI` (Avalonia/GUI), and `AndroidUI` (MAUI). All UIs are decoupled from application logic, interacting only through the `ICommandHandler` interface.
 
 ```
-ICommandHandler<TCommand, TResult>          ← inbound port (Application/Commands/)
-VerwerkKalenderCommand                      ← immutable record; input only, no behaviour
-VerwerkKalenderCommandHandler               ← orchestrator; calls outbound ports
+┌─────────────────────────────────────────────────────────────┐
+│  Presentation (Driving Adapters)                            │
+│  ConsoleUI (ANSI) · DesktopUI (Avalonia) · Android (MAUI)   │
+└───────────────┬─────────────────────────────────────────────┘
+                │ depends on (ICommandHandler)
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Application (Inbound Ports / Orchestration)                │
+│  VerwerkKalenderCommand · VerwerkKalenderCommandHandler     │
+└───────────────┬──────────────────────┬──────────────────────┘
+                │ calls                │ calls
+                ▼                      ▼
+┌──────────────────────────────────────┬──────────────────────┐
+│  Domain (Core Business Logic)        │  Infrastructure      │
+│  Entities: Adres, AfvalOphaalMoment  │  (Driven Adapters)   │
+│  ValueObjects: AfvalType, Verwerker  │  TwenteMilieuApi     │
+│  Interfaces (Outbound Ports):        │  EfAfvalRepository   │
+│    IAfvalApi, IAfvalRepository,      │  IcsExporter         │
+│    IIcsExporter                      │  CacherendeAfvalApi  │
+└──────────────────────────────────────┴──────────────────────┘
 ```
 
-Both UIs resolve `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>` from DI.
-Adding a new use case = new `record` + new `Handler` class + one DI line. No other files change.
-Cross-cutting concerns (logging, timing, validation) attach as handler decorators wrapping the interface.
+### Commands pattern (Light CQRS)
+
+We use a hand-rolled command pattern to avoid a hard dependency on MediatR while gaining its benefits:
+- `ICommandHandler<TCommand, TResult>`: Generic interface for all use cases.
+- `VerwerkKalenderCommand`: Immutable `record` carrying user input.
+- `VerwerkKalenderCommandHandler`: Stateless orchestrator.
+
+Both UIs resolve the handler via Dependency Injection, allowing for easy testing and the addition of cross-cutting concerns (logging, validation) via decorators.
 
 ### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
 
-1. Receives `VerwerkKalenderCommand` with postcode, huisnummer, jaar, herinneringUur, outputPad
-2. `TwenteMilieuApi.HaalUniekAdresIdOpAsync` → POST `/api/FetchAdress` → returns `UniqueId`
-3. `TwenteMilieuApi.HaalKalenderOpAsync` → POST `/api/GetCalendar` → returns `List<AfvalOphaalMoment>`
-4. `EfAfvalRepository.SlaOpOfUpdateAsync` → upsert into `afvalkalender.db` (local SQLite file); tracks `LaatstGewijzigd` on change
-5. Re-fetch from DB for consistency
-6. `IcsExporter.ExporteerAsync` → writes `AfvalKalender_{postcode}_{huisnummer}_{year}.ics`
+1. Receives `VerwerkKalenderCommand` (postcode, huisnummer, jaar, herinneringUur, outputPad, companyCode).
+2. `IAfvalApi.HaalUniekAdresIdOpAsync` → Fetches the internal Ximmio `UniqueId`.
+3. `IAfvalApi.HaalKalenderOpAsync` → Retrieves collection dates for the year.
+4. `IAfvalRepository.SlaOpOfUpdateAsync` → Persists to SQLite, tracking `LaatstGewijzigd` for changes.
+5. `IIcsExporter.ExporteerAsync` → Generates the `.ics` file with relative reminder triggers.
 
 ### Key design decisions
 
-- **No EF migrations** — schema created via `EnsureCreated()` on first run; `afvalkalender.db` lives next to the executable.
-- **SSL validation disabled** for the Twente Milieu API `HttpClient` (API uses a self-signed cert).
-- **Idempotent upserts** — re-running with the same address updates only records whose `Omschrijving` changed.
-- **ICS UIDs** are scoped per `type + date + postcode` to prevent duplicate calendar entries on reimport.
-- **MVVM source generators** — `[ObservableProperty]` and `[RelayCommand]` on `MainWindowViewModel` generate boilerplate at compile time; do not write manual `INotifyPropertyChanged` code.
-- **Dutch throughout** — all domain identifiers, entity names, and method names are in Dutch to match the problem domain.
-- **MediatR** — not the default; prefer a hand-rolled `ICommandHandler<TCommand>` interface + DI registration. Existing MediatR usage does not need to be refactored.
+- **Dutch Ubiquitous Language**: Domain entities and methods use Dutch names to match the problem domain.
+- **SQLite with EnsureCreated**: No EF migrations; the database is created dynamically in the application's local data folder.
+- **SSL Bypass**: The Ximmio API often uses self-signed certificates; `HttpClient` is configured to accept them safely for this specific use case.
+- **Idempotent Updates**: Scheduling changes are detected by comparing descriptions; only changed records trigger a `LaatstGewijzigd` update.
+- **MAUI 10 / Android 16 Readiness**: `AndroidUI` uses modern `CreateWindow` patterns and compiled bindings (`x:DataType`) for performance.
+- **API Caching**: `CacherendeAfvalApi` decorates the API port to provide 24-hour file-based caching, respecting the `companyCode` for multi-provider support.
 
 ## Multi-Disciplinaire Teamlens
 

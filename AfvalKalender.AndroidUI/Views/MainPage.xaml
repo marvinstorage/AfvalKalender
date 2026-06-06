@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AfvalKalender.AndroidUI.ViewModels"
+             xmlns:domain="clr-namespace:AfvalKalender.Domain.ValueObjects;assembly=AfvalKalender.Domain"
+             x:Class="AfvalKalender.AndroidUI.Views.MainPage"
+             x:DataType="vm:MainPageViewModel"
+             Title="AfvalKalender">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="25">
+            
+            <Border BackgroundColor="{StaticResource Primary}" 
+                    StrokeShape="RoundRectangle 20"
+                    Padding="20"
+                    HorizontalOptions="FillAndExpand">
+                <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                    <Path Data="M 75,20 L 90,45 H 80 V 70 H 70 V 45 H 60 L 75,20 M 35,50 L 55,40 V 48 H 80 V 58 H 55 V 66 L 35,50 M 20,80 L 35,55 H 25 V 30 H 15 V 55 H 5 L 20,80"
+                          Fill="White"
+                          Aspect="Uniform"
+                          HeightRequest="60"
+                          WidthRequest="60"
+                          HorizontalOptions="Center" />
+                    
+                    <Label Text="AFVAL KALENDER EXPORTEUR"
+                           Style="{StaticResource HeaderLabel}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Afvalverwerker" />
+                <Picker ItemsSource="{Binding AfvalVerwerkers}"
+                        ItemDisplayBinding="{Binding Naam}"
+                        SelectedItem="{Binding GeselecteerdeVerwerker}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Postcode" />
+                <Entry Text="{Binding Postcode}" Placeholder="bijv. 1234AB" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Huisnummer" />
+                <Entry Text="{Binding Huisnummer}" Placeholder="bijv. 10" Keyboard="Numeric" />
+            </VerticalStackLayout>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
+                <VerticalStackLayout Grid.Column="0" Spacing="5">
+                    <Label Text="Jaar" />
+                    <Entry Text="{Binding Jaar}" Keyboard="Numeric" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="5">
+                    <Label Text="Herinnering (uur)" />
+                    <Entry Text="{Binding HerinneringUur}" Keyboard="Numeric" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <Button Text="Exporteren &amp; Delen"
+                    Command="{Binding VerwerkCommand}"
+                    IsEnabled="{Binding IsBezig, Converter={StaticResource InverseBoolConverter}}"
+                    HeightRequest="50" />
+
+            <ActivityIndicator IsRunning="{Binding IsBezig}"
+                               IsVisible="{Binding IsBezig}"
+                               Color="{StaticResource Primary}" />
+
+            <Label Text="{Binding StatusBericht}"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center"
+                   FontAttributes="Italic" />
+
+            <Button Text="ICS Bestand Delen"
+                    Command="{Binding DeelBestandCommand}"
+                    IsVisible="{Binding HeeftResultaat}"
+                    BackgroundColor="{StaticResource Secondary}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

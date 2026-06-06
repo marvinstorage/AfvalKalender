@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AfvalKalender.Infrastructur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AfvalKalender.DesktopUI.Tests", "AfvalKalender.DesktopUI.Tests\AfvalKalender.DesktopUI.Tests.csproj", "{8C506A38-4F51-4E37-A3C7-8DDF3A151379}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AfvalKalender.AndroidUI", "AfvalKalender.AndroidUI\AfvalKalender.AndroidUI.csproj", "{7755F417-2F0D-4B7E-8D30-54D1CC193F12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AfvalKalender.AndroidUI.Tests", "AfvalKalender.AndroidUI.Tests\AfvalKalender.AndroidUI.Tests.csproj", "{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +129,30 @@ Global
 		{8C506A38-4F51-4E37-A3C7-8DDF3A151379}.Release|x64.Build.0 = Release|Any CPU
 		{8C506A38-4F51-4E37-A3C7-8DDF3A151379}.Release|x86.ActiveCfg = Release|Any CPU
 		{8C506A38-4F51-4E37-A3C7-8DDF3A151379}.Release|x86.Build.0 = Release|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Debug|x64.Build.0 = Debug|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Debug|x86.Build.0 = Debug|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Release|x64.ActiveCfg = Release|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Release|x64.Build.0 = Release|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Release|x86.ActiveCfg = Release|Any CPU
+		{7755F417-2F0D-4B7E-8D30-54D1CC193F12}.Release|x86.Build.0 = Release|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Debug|x64.Build.0 = Debug|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Debug|x86.Build.0 = Debug|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Release|x64.ActiveCfg = Release|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Release|x64.Build.0 = Release|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Release|x86.ActiveCfg = Release|Any CPU
+		{7BA3A3F1-C8C9-494A-8EE9-6FD9282BB9AA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

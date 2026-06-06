@@ -8,8 +8,8 @@
         x:Class="AfvalKalender.DesktopUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Afval Kalender"
-        Width="450" Height="600"
+        Title="AfvalKalender Exporteur"
+        Width="450" Height="630"
         WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
@@ -17,9 +17,15 @@
     </Design.DataContext>
 
     <StackPanel Margin="20" Spacing="15">
-        <Border Background="Red" CornerRadius="10" Padding="15">
+        <Border Background="#2E7D32" CornerRadius="10" Padding="15">
             <StackPanel HorizontalAlignment="Center">
-                <TextBlock Text="AFVAL KALENDER"
+                <Path Data="M 75,20 L 90,45 H 80 V 70 H 70 V 45 H 60 L 75,20 M 35,50 L 55,40 V 48 H 80 V 58 H 55 V 66 L 35,50 M 20,80 L 35,55 H 25 V 30 H 15 V 55 H 5 L 20,80"
+                      Fill="White"
+                      Width="40" Height="40"
+                      Stretch="Uniform"
+                      HorizontalAlignment="Center"
+                      Margin="0,0,0,10"/>
+                <TextBlock Text="AFVAL KALENDER EXPORTEUR"
                            Foreground="White"
                            FontSize="20"
                            FontWeight="Bold"
@@ -68,7 +74,7 @@
                 IsEnabled="{Binding !IsBezig}"
                 HorizontalAlignment="Stretch" 
                 HorizontalContentAlignment="Center"
-                Background="Red" 
+                Background="#2E7D32" 
                 Foreground="White"
                 Height="40">
             <StackPanel Orientation="Horizontal" Spacing="10">

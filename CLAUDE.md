@@ -31,27 +31,34 @@ dotnet publish -c Release -r linux-x64 --self-contained
 
 Hexagonal / Clean Architecture with Dutch-language domain (multi-provider Dutch waste collection calendar app via the Ximmio API).
 
-**Dependency flow:** `ConsoleUI` / `DesktopUI` → `Application` → `Domain` ← `Infrastructure`
+**Dependency flow:** `Presentation` → `Application` → `Domain` ← `Infrastructure`
 
-- **Domain** — Zero NuGet dependencies. Pure C# types: entities, value objects, enums, and the three outbound port interfaces (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`). `AfvalVerwerker` (value object) and `AfvalVerwerkers.Alle` (static registry) live here — 16 supported Dutch providers with their Ximmio `CompanyCode`.
-- **Application** — Light CQRS. `ICommandHandler<TCommand, TResult>` is the inbound port contract. `VerwerkKalenderCommand` (record) carries input; `VerwerkKalenderCommandHandler` orchestrates the full fetch/persist/export workflow by calling the outbound ports.
-- **Infrastructure** — Driven adapters: `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24 h file cache decorator on `IAfvalApi`).
-- **Presentation** — `ConsoleUI` (ANSI terminal, `Microsoft.Extensions.Hosting`) and `DesktopUI` (Avalonia, `CommunityToolkit.Mvvm` source generators). Both layers depend on `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>` only — no direct coupling to Application internals.
+- **Domain** — Zero NuGet dependencies. Pure C# types: entities, value objects, enums, and the three outbound port interfaces (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`).
+- **Application** — Light CQRS. `ICommandHandler<TCommand, TResult>` is the inbound port contract. `VerwerkKalenderCommandHandler` orchestrates the full fetch/persist/export workflow.
+- **Infrastructure** — Driven adapters: `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24 h file cache decorator).
+- **Presentation** — `ConsoleUI` (ANSI/CLI), `DesktopUI` (Avalonia/GUI), and `AndroidUI` (MAUI). All layers depend on `ICommandHandler` only — no direct coupling to Application internals.
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Presentation  (Driving Adapter)                        │
-│  ConsoleUI (ANSI) · DesktopUI (Avalonia)                │
-├─────────────────────────────────────────────────────────┤
-│  Application  (Core)                                    │
-│  VerwerkKalenderCommand · CommandHandler · Ports        │
-├─────────────────────────────────────────────────────────┤
-│  Domain  (Core — ZERO external dependencies)            │
-│  Adres · AfvalOphaalMoment · AfvalType · AfvalVerwerker │
-├─────────────────────────────────────────────────────────┤
-│  Infrastructure  (Driven Adapters)                      │
-│  TwenteMilieuApi · EfAfvalRepository · IcsExporter      │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  Presentation (Driving Adapters)                            │
+│  ConsoleUI (ANSI) · DesktopUI (Avalonia) · Android (MAUI)   │
+└───────────────┬─────────────────────────────────────────────┘
+                │ depends on (ICommandHandler)
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Application (Inbound Ports / Orchestration)                │
+│  VerwerkKalenderCommand · VerwerkKalenderCommandHandler     │
+└───────────────┬──────────────────────┬──────────────────────┘
+                │ calls                │ calls
+                ▼                      ▼
+┌──────────────────────────────────────┬──────────────────────┐
+│  Domain (Core Business Logic)        │  Infrastructure      │
+│  Entities: Adres, AfvalOphaalMoment  │  (Driven Adapters)   │
+│  ValueObjects: AfvalType, Verwerker  │  TwenteMilieuApi     │
+│  Interfaces (Outbound Ports):        │  EfAfvalRepository   │
+│    IAfvalApi, IAfvalRepository,      │  IcsExporter         │
+│    IIcsExporter                      │  CacherendeAfvalApi  │
+└──────────────────────────────────────┴──────────────────────┘
 ```
 
 ### Commands pattern
@@ -62,31 +69,30 @@ VerwerkKalenderCommand                      ← immutable record; input only, no
 VerwerkKalenderCommandHandler               ← orchestrator; calls outbound ports
 ```
 
-Both UIs resolve `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>` from DI.
+All UIs resolve `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>` from DI.
 Adding a new use case = new `record` + new `Handler` class + one DI line. No other files change.
 Cross-cutting concerns (logging, timing, validation) attach as handler decorators wrapping the interface.
 
 ### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
 
 1. Receives `VerwerkKalenderCommand` with postcode, huisnummer, jaar, herinneringUur, outputPad, companyCode
-2. `TwenteMilieuApi.HaalUniekAdresIdOpAsync(postcode, huisnummer, companyCode)` → POST `/api/FetchAdress` → returns `UniqueId`
-3. `TwenteMilieuApi.HaalKalenderOpAsync(uniqueId, postcode, huisnummer, jaar, companyCode)` → POST `/api/GetCalendar` → returns `List<AfvalOphaalMoment>`
-4. `EfAfvalRepository.SlaOpOfUpdateAsync` → upsert into `afvalkalender.db` (local SQLite file); tracks `LaatstGewijzigd` on change
-5. Re-fetch from DB for consistency
-6. `IcsExporter.ExporteerAsync` → writes `AfvalKalender_{postcode}_{huisnummer}_{year}.ics`
+2. `IAfvalApi.HaalUniekAdresIdOpAsync` → POST `/api/FetchAdress` → returns `UniqueId`
+3. `IAfvalApi.HaalKalenderOpAsync` → POST `/api/GetCalendar` → returns `List<AfvalOphaalMoment>`
+4. `IAfvalRepository.SlaOpOfUpdateAsync` → upsert into `afvalkalender.db` (local SQLite file)
+5. `IIcsExporter.ExporteerAsync` → writes `AfvalKalender_{postcode}_{huisnummer}_{year}.ics`
 
 ### Key design decisions
 
-- **No EF migrations** — schema created via `EnsureCreated()` on first run; `afvalkalender.db` lives next to the executable.
+- **No EF migrations** — schema created via `EnsureCreated()` on first run.
 - **SSL validation disabled** for the Ximmio `HttpClient` (API uses a self-signed cert).
-- **Multi-provider via companyCode** — `AfvalVerwerker` value object in the Domain holds the provider's UUID. The UI populates a picker from `AfvalVerwerkers.Alle`; the selected `CompanyCode` travels through `VerwerkKalenderCommand` to every `IAfvalApi` call. Cache filenames include the `companyCode` so entries are scoped per provider.
-- **Postcode normalisation** — both UIs strip spaces before building the command (`"1234 AB"` → `"1234AB"`). The Ximmio API rejects postcodes with spaces silently (returns empty `dataList`).
-- **Empty dataList guard** — `TwenteMilieuApi.HaalUniekAdresIdOpAsync` checks `dataList?.Count > 0` before indexing; an empty result throws a user-friendly exception rather than `ArgumentOutOfRangeException`.
-- **Idempotent upserts** — re-running with the same address updates only records whose `Omschrijving` changed.
+- **Multi-provider via companyCode** — The UI populates a picker from `AfvalVerwerkers.Alle`; the selected `CompanyCode` travels through the command to every `IAfvalApi` call. 
+- **Postcode normalisation** — All UIs strip spaces before building the command (`"1234 AB"` → `"1234AB"`).
+- **MAUI 10 / Android 16 Readiness** — `AndroidUI` uses the `CreateWindow` override and compiled bindings (`x:DataType`) for performance.
+- **Idempotent upserts** — Re-running updates only records whose `Omschrijving` changed.
 - **ICS UIDs** are scoped per `type + date + postcode` to prevent duplicate calendar entries on reimport.
-- **MVVM source generators** — `[ObservableProperty]` and `[RelayCommand]` on `MainWindowViewModel` generate boilerplate at compile time; do not write manual `INotifyPropertyChanged` code.
-- **Dutch throughout** — all domain identifiers, entity names, and method names are in Dutch to match the problem domain.
-- **MediatR** — not the default; prefer a hand-rolled `ICommandHandler<TCommand>` interface + DI registration. Existing MediatR usage does not need to be refactored.
+- **MVVM source generators** — `[ObservableProperty]` and `[RelayCommand]` on `MainWindowViewModel` generate boilerplate at compile time.
+- **Dutch throughout** — All domain identifiers, entity names, and method names are in Dutch.
+- **MediatR** — Not used; prefer the hand-rolled `ICommandHandler<TCommand>` pattern.
 
 ## Multi-Disciplinaire Teamlens
 
