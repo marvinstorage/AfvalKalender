@@ -1,0 +1,9 @@
+Package: afvalkalender-exporteur
+Version: 1.2.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Gemini CLI <gemini@localhost>
+Description: AfvalKalender Exporteur CLI
+ Een moderne tool om afvalophaalschema's te exporteren naar ICS.
+ Ondersteunt meerdere Nederlandse afvalverwerkers via de Ximmio API.
