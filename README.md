@@ -91,26 +91,26 @@ We gebruiken een **Hexagonale Architectuur** (ook wel Ports & Adapters genoemd).
 
 ```mermaid
 graph TD
-    subgraph UI [Presentation Lagen (Driving Adapters)]
+    subgraph UI ["Presentation Lagen (Driving Adapters)"]
         Console[ConsoleUI]
         Desktop[DesktopUI]
         Android[AndroidUI - MAUI 10]
     end
 
-    subgraph Application [Application Laag (Inbound Ports)]
+    subgraph Application ["Application Laag (Inbound Ports)"]
         Handler[VerwerkKalenderCommandHandler]
         Command[VerwerkKalenderCommand]
         IHandler[ICommandHandler]
     end
 
-    subgraph Infrastructure [Infrastructure Laag (Driven Adapters)]
+    subgraph Infrastructure ["Infrastructure Laag (Driven Adapters)"]
         Cache[CacherendeAfvalApi\nDecorator]
         Api[XimmioApi / TwenteMilieuApi\nHTTP adapter]
         Repo[EfAfvalRepository]
         Ics[IcsExporter]
     end
 
-    subgraph Domain [Domain Laag (Core)]
+    subgraph Domain ["Domain Laag (Core)"]
         Entities[Entities: Adres, AfvalOphaalMoment]
         ValueObjects[Value Objects: AfvalVerwerker, AfvalType]
         Interfaces[Outbound Ports: IAfvalApi, IAfvalRepository, IIcsExporter]
