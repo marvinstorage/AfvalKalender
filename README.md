@@ -59,7 +59,7 @@ U kunt kant-en-klare versies downloaden voor uw systeem:
 - **Linux:** Download `AfvalKalender_Exporteur_CLI_v1.2.0_linux-x64` of installeer via het `.deb` pakket.
 
 #### Android App
-- **Android:** Download `AfvalKalender_Exporteur_v1.2.0.apk` voor side-loading op apparaten zoals de Pixel 7 Pro of Motorola G84.
+- **Android:** Download `AfvalKalender_Exporteur_v1.2.0.apk` voor side-loading op apparaten zoals de Pixel 7 of Motorola G84.
 
 ---
 
