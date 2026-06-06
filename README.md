@@ -90,18 +90,21 @@ graph TD
 
     subgraph Infrastructure [Infrastructure Laag]
         Cache[CacherendeAfvalApi\nDecorator]
-        Api[TwenteMilieuApi]
+        Api[XimmioApi / TwenteMilieuApi\nHTTP adapter]
         Repo[EfAfvalRepository]
         Ics[IcsExporter]
     end
 
     subgraph Domain [Domain Laag]
         Entities[Entities: Adres, AfvalOphaalMoment]
+        ValueObjects[Value Objects: AfvalVerwerker, AfvalType]
         Interfaces[Interfaces: IAfvalApi, IAfvalRepository, IIcsExporter]
     end
 
     Console -- ICommandHandler --> Handler
     Desktop -- ICommandHandler --> Handler
+    Console -. AfvalVerwerkers.Alle .-> ValueObjects
+    Desktop -. AfvalVerwerkers.Alle .-> ValueObjects
     Command -. gebruikt door .-> Handler
     Handler --> Domain
     Cache -- implements --> Interfaces
