@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using AfvalKalender.Application.Services;
 using AfvalKalender.Domain.Interfaces;
 using AfvalKalender.Infrastructure.Api;
+using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
 using AfvalKalender.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -53,11 +54,13 @@ public partial class App : Avalonia.Application
         services.AddDbContext<AfvalDbContext>(options =>
             options.UseSqlite("Data Source=afvalkalender.db"));
         
-        services.AddHttpClient<IAfvalApi, TwenteMilieuApi>()
+        services.AddHttpClient<TwenteMilieuApi>()
             .ConfigurePrimaryHttpMessageHandler(() => new System.Net.Http.HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = System.Net.Http.HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             });
+        services.AddScoped<IAfvalApi>(sp =>
+            new CacherendeAfvalApi(sp.GetRequiredService<TwenteMilieuApi>(), "apicache"));
             
         services.AddScoped<IAfvalRepository, EfAfvalRepository>();
         services.AddScoped<IIcsExporter, IcsExporter>();

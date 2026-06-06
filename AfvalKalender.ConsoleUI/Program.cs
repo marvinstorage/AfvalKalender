@@ -2,6 +2,7 @@ using AfvalKalender.Application.Services;
 using AfvalKalender.ConsoleUI;
 using AfvalKalender.Domain.Interfaces;
 using AfvalKalender.Infrastructure.Api;
+using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
 using AfvalKalender.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +15,14 @@ var host = Host.CreateDefaultBuilder(args)
         // Infrastructure
         services.AddDbContext<AfvalDbContext>(options =>
             options.UseSqlite("Data Source=afvalkalender.db"));
-        
-        services.AddHttpClient<IAfvalApi, TwenteMilieuApi>()
+
+        services.AddHttpClient<TwenteMilieuApi>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             });
+        services.AddScoped<IAfvalApi>(sp =>
+            new CacherendeAfvalApi(sp.GetRequiredService<TwenteMilieuApi>(), "apicache"));
         services.AddScoped<IAfvalRepository, EfAfvalRepository>();
         services.AddScoped<IIcsExporter, IcsExporter>();
 
