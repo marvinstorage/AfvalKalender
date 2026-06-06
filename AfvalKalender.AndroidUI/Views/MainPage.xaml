@@ -30,6 +30,7 @@
             <VerticalStackLayout Spacing="5">
                 <Label Text="Afvalverwerker" />
                 <Picker ItemsSource="{Binding AfvalVerwerkers}"
+                        x:DataType="vm:MainPageViewModel"
                         ItemDisplayBinding="{Binding Naam}"
                         SelectedItem="{Binding GeselecteerdeVerwerker}" />
             </VerticalStackLayout>
