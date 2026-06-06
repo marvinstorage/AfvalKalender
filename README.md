@@ -16,6 +16,7 @@ De applicatie automatiseert het proces van het bijhouden van de afvalkalender in
 -   **Aanpasbare Reminders:** Stel zelf in hoeveel uur van tevoren je een melding wilt krijgen.
 -   **Nederlandstalig:** De interface en kalender-omschrijvingen zijn volledig in het Nederlands.
 -   **Clickable Links:** Directe toegang tot het gegenereerde bestand vanuit de UI.
+-   **API Cache:** Slaat API-antwoorden 24 uur op in lokale cachebestanden om rate-limiting te voorkomen.
 
 ## Gebruik
 
@@ -85,6 +86,7 @@ graph TD
     end
 
     subgraph Infrastructure [Infrastructure Laag]
+        Cache[CacherendeAfvalApi\nDecorator]
         Api[TwenteMilieuApi]
         Repo[EfAfvalRepository]
         Ics[IcsExporter]
@@ -98,7 +100,8 @@ graph TD
     Console --> Service
     Desktop --> Service
     Service --> Domain
-    Api -- implements --> Interfaces
+    Cache -- implements --> Interfaces
+    Cache -- wraps --> Api
     Repo -- implements --> Interfaces
     Ics -- implements --> Interfaces
     Infrastructure -. depends on .-> Domain
@@ -128,16 +131,29 @@ sequenceDiagram
     actor User
     participant UI as Desktop/Console UI
     participant App as AfvalService
+    participant Cache as CacherendeAfvalApi
     participant API as TwenteMilieuApi
     participant DB as EfAfvalRepository (SQLite)
     participant ICS as IcsExporter
 
     User->>UI: Voer Postcode & Huisnummer in
     UI->>App: VerwerkKalenderAsync(postcode, huisnummer, jaar)
-    App->>API: HaalUniekAdresIdOpAsync(postcode, huisnummer)
-    API-->>App: uniqueAddressID
-    App->>API: HaalKalenderOpAsync(uniqueAddressID, jaar)
-    API-->>App: Lijst van ophaalmomenten
+    App->>Cache: HaalUniekAdresIdOpAsync(postcode, huisnummer)
+    alt Cache geldig (minder dan 24 uur oud)
+        Cache-->>App: UniqueId (uit cache)
+    else Cache verlopen of afwezig
+        Cache->>API: HaalUniekAdresIdOpAsync(postcode, huisnummer)
+        API-->>Cache: UniqueId
+        Cache-->>App: UniqueId (opgeslagen in cache)
+    end
+    App->>Cache: HaalKalenderOpAsync(UniqueId, jaar)
+    alt Cache geldig (minder dan 24 uur oud)
+        Cache-->>App: Lijst van ophaalmomenten (uit cache)
+    else Cache verlopen of afwezig
+        Cache->>API: HaalKalenderOpAsync(UniqueId, jaar)
+        API-->>Cache: Lijst van ophaalmomenten
+        Cache-->>App: Lijst van ophaalmomenten (opgeslagen in cache)
+    end
     App->>DB: SlaOpOfUpdateAsync(momenten)
     DB-->>App: Database bijgewerkt & LaatstGewijzigd getrackt
     App->>ICS: ExporteerAsync(momenten, bestandspad)
@@ -153,6 +169,7 @@ De structuur is gebaseerd op een duidelijke domeintaal (Ubiquitous Language). Co
 -   **Uniek Adres:** De API vereist eerst een `UniqueId` op basis van postcode en huisnummer voordat de kalender opgehaald kan worden.
 -   **Idempotentie:** Als de applicatie meerdere keren wordt gedraaid voor hetzelfde jaar, zullen bestaande momenten in de database worden bijgewerkt als de omschrijving is veranderd. De kolom `LaatstGewijzigd` houdt bij wanneer dit voor het laatst is gebeurd.
 -   **Reminder Trigger:** De ICS exporter gebruikt een relatieve trigger (`-PTnH`) om herinneringen in te stellen op het exacte aantal uren dat de gebruiker heeft opgegeven.
+-   **API Cache:** `CacherendeAfvalApi` slaat zowel het adres-ID als de kalenderdata op als JSON-bestanden in de map `apicache/`, elk met een tijdstempel. De cache is 24 uur geldig. Bij een beschadigd of verlopen cachebestand valt de applicatie stil terug op een verse API-aanroep. Er worden geen extra NuGet-pakketten gebruikt; de serialisatie verloopt via `System.Text.Json` (BCL).
 
 ## Minimale Afhankelijkheden
 De applicatie is ontworpen om zo min mogelijk externe libraries te gebruiken:
