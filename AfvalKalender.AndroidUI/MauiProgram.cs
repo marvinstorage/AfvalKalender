@@ -47,9 +47,12 @@ public static class MauiProgram
 		builder.Services.AddScoped<IIcsExporter, IcsExporter>();
 
 		// Application
-		builder.Services.AddScoped<
-			ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>,
-			VerwerkKalenderCommandHandler>();
+		builder.Services.AddScoped<ICommandValidator<VerwerkKalenderCommand>, VerwerkKalenderCommandValidator>();
+		builder.Services.AddScoped<VerwerkKalenderCommandHandler>();
+		builder.Services.AddScoped<ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>>(sp =>
+			new ValidatingCommandHandlerDecorator<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>(
+				sp.GetRequiredService<VerwerkKalenderCommandHandler>(),
+				sp.GetRequiredService<ICommandValidator<VerwerkKalenderCommand>>()));
 
 		// ViewModels
 		builder.Services.AddTransient<MainPageViewModel>();

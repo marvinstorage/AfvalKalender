@@ -68,9 +68,12 @@ public partial class App : Avalonia.Application
         services.AddScoped<IIcsExporter, IcsExporter>();
 
         // Application
-        services.AddScoped<
-            ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>,
-            VerwerkKalenderCommandHandler>();
+        services.AddScoped<ICommandValidator<VerwerkKalenderCommand>, VerwerkKalenderCommandValidator>();
+        services.AddScoped<VerwerkKalenderCommandHandler>();
+        services.AddScoped<ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>>(sp =>
+            new ValidatingCommandHandlerDecorator<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>>(
+                sp.GetRequiredService<VerwerkKalenderCommandHandler>(),
+                sp.GetRequiredService<ICommandValidator<VerwerkKalenderCommand>>()));
 
         // ViewModel
         services.AddTransient<MainWindowViewModel>();

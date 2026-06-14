@@ -85,7 +85,7 @@ De applicatie is opgezet volgens moderne software engineering principes, met een
 We gebruiken een **Hexagonale Architectuur** (ook wel Ports & Adapters genoemd). Dit zorgt ervoor dat de kern van de applicatie (het Domein en de Applicatielaag) volledig onafhankelijk is van de gebruikersinterface, de database en de externe API's van afvalverwerkers.
 
 -   **Domein Laag:** Bevat de pure business logica, entiteiten (`Adres`, `AfvalOphaalMoment`) en de definities van de uitgaande poorten (Interfaces). Geen externe afhankelijkheden.
--   **Applicatie Laag:** Bevat de use-case orkestratie. We gebruiken een **Light CQRS** patroon met een hand-gerolde `ICommandHandler`. Dit vervangt complexe libraries zoals MediatR en biedt een duidelijke 'inbound port' voor alle interfaces.
+-   **Applicatie Laag:** Bevat de use-case orkestratie. We gebruiken een **Light CQRS** patroon met een hand-gerolde `ICommandHandler`. Dit vervangt complexe libraries zoals MediatR en biedt een duidelijke 'inbound port' voor alle interfaces. Een validatiedecorator (`ValidatingCommandHandlerDecorator`) valideert automatisch alle binnenkomende commando's op postcodeformaat, geldige GUID en overige parameters.
 -   **Infrastructure Laag:** Bevat de concrete implementaties ('adapters') voor de buitenwereld, zoals de `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite) en de `IcsExporter`.
 -   **Presentation Laag:** De verschillende interfaces (Console, Desktop, Android) zijn slechts dunne schillen die commando's sturen naar de applicatielaag.
 
