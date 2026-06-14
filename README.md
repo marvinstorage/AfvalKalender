@@ -200,7 +200,7 @@ De structuur is gebaseerd op een duidelijke domeintaal (Ubiquitous Language). Co
 -   **Uniek Adres:** De API vereist eerst een `UniqueId` op basis van postcode, huisnummer en `companyCode` voordat de kalender opgehaald kan worden. Als het adres niet gevonden wordt, geeft de applicatie een duidelijke foutmelding dat het adres mogelijk buiten het servicegebied van de geselecteerde verwerker valt.
 -   **Idempotentie:** Als de applicatie meerdere keren wordt gedraaid voor hetzelfde jaar, zullen bestaande momenten in de database worden bijgewerkt als de omschrijving is veranderd. De kolom `LaatstGewijzigd` houdt bij wanneer dit voor het laatst is gebeurd.
 -   **Reminder Trigger:** De ICS exporter gebruikt een relatieve trigger (`-PTnH`) om herinneringen in te stellen op het exacte aantal uren dat de gebruiker heeft opgegeven.
--   **API Cache:** `CacherendeAfvalApi` slaat zowel het adres-ID als de kalenderdata op als JSON-bestanden in de map `apicache/` (of de cache-directory van het platform op mobiel). De `companyCode` maakt deel uit van de bestandsnaam zodat cache-entries per verwerker worden gescheiden. De cache is 24 uur geldig.
+-   **API Cache:** `CacherendeAfvalApi` slaat zowel het adres-ID als de kalenderdata op als JSON-bestanden in de map `apicache/` (of de cache-directory van het platform op mobiel). De `companyCode` maakt deel uit van de bestandsnaam zodat cache-entries per verwerker worden gescheiden. De cache is 24 uur geldig. De cache kan worden gepasseerd/geïnvalideerd door de `ForceerVernieuwen` parameter op de command/API-aanroep te gebruiken.
 
 ## Minimale Afhankelijkheden
 De applicatie is ontworpen om zo min mogelijk externe libraries te gebruiken:

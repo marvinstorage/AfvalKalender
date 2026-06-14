@@ -180,4 +180,39 @@ public class CacherendeAfvalApiTests : IDisposable
         r1[0].Type.Should().Be(AfvalType.GRIJS);
         r2[0].Type.Should().Be(AfvalType.GROEN);
     }
+
+    [Fact]
+    public async Task HaalUniekAdresIdOpAsync_MetForceerVernieuwen_RoeptApiOpnieuwAanZelfsBinnenTtl()
+    {
+        // Arrange
+        _mockInnerApi.Setup(x => x.HaalUniekAdresIdOpAsync("1234AB", "10", It.IsAny<string>(), It.IsAny<bool>())).ReturnsAsync("uniek-123");
+        var sut = new CacherendeAfvalApi(_mockInnerApi.Object, _tijdelijkePad);
+        await sut.HaalUniekAdresIdOpAsync("1234AB", "10");
+
+        // Act
+        var resultaat = await sut.HaalUniekAdresIdOpAsync("1234AB", "10", forceerVernieuwen: true);
+
+        // Assert
+        resultaat.Should().Be("uniek-123");
+        _mockInnerApi.Verify(x => x.HaalUniekAdresIdOpAsync("1234AB", "10", It.IsAny<string>(), false), Times.Once);
+        _mockInnerApi.Verify(x => x.HaalUniekAdresIdOpAsync("1234AB", "10", It.IsAny<string>(), true), Times.Once);
+    }
+
+    [Fact]
+    public async Task HaalKalenderOpAsync_MetForceerVernieuwen_RoeptApiOpnieuwAanZelfsBinnenTtl()
+    {
+        // Arrange
+        var momenten = new[] { MaakMoment() };
+        _mockInnerApi.Setup(x => x.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026, It.IsAny<string>(), It.IsAny<bool>()))
+            .ReturnsAsync(momenten);
+        var sut = new CacherendeAfvalApi(_mockInnerApi.Object, _tijdelijkePad);
+        await sut.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026);
+
+        // Act
+        await sut.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026, forceerVernieuwen: true);
+
+        // Assert
+        _mockInnerApi.Verify(x => x.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026, It.IsAny<string>(), false), Times.Once);
+        _mockInnerApi.Verify(x => x.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026, It.IsAny<string>(), true), Times.Once);
+    }
 }

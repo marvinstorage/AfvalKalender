@@ -19,7 +19,7 @@ public class TwenteMilieuApi : IAfvalApi
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36");
     }
 
-    public async Task<string> HaalUniekAdresIdOpAsync(string postcode, string huisnummer, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4")
+    public async Task<string> HaalUniekAdresIdOpAsync(string postcode, string huisnummer, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4", bool forceerVernieuwen = false)
     {
         var requestBody = new
         {
@@ -44,7 +44,7 @@ public class TwenteMilieuApi : IAfvalApi
         return uniekId;
     }
 
-    public async Task<IEnumerable<AfvalOphaalMoment>> HaalKalenderOpAsync(string uniekAdresId, string postcode, string huisnummer, int jaar, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4")
+    public async Task<IEnumerable<AfvalOphaalMoment>> HaalKalenderOpAsync(string uniekAdresId, string postcode, string huisnummer, int jaar, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4", bool forceerVernieuwen = false)
     {
         var requestBody = new
         {

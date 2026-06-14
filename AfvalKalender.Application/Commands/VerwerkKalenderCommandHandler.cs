@@ -23,8 +23,8 @@ public class VerwerkKalenderCommandHandler
     public async Task<IReadOnlyList<AfvalOphaalMoment>> HandleAsync(
         VerwerkKalenderCommand command, CancellationToken ct = default)
     {
-        var uniekId = await _afvalApi.HaalUniekAdresIdOpAsync(command.Postcode, command.Huisnummer, command.CompanyCode);
-        var momenten = await _afvalApi.HaalKalenderOpAsync(uniekId, command.Postcode, command.Huisnummer, command.Jaar, command.CompanyCode);
+        var uniekId = await _afvalApi.HaalUniekAdresIdOpAsync(command.Postcode, command.Huisnummer, command.CompanyCode, command.ForceerVernieuwen);
+        var momenten = await _afvalApi.HaalKalenderOpAsync(uniekId, command.Postcode, command.Huisnummer, command.Jaar, command.CompanyCode, command.ForceerVernieuwen);
 
         await _afvalRepository.SlaOpOfUpdateAsync(momenten);
 

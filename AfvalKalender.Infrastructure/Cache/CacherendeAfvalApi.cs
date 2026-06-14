@@ -20,26 +20,32 @@ public class CacherendeAfvalApi : IAfvalApi
         Directory.CreateDirectory(cachePad);
     }
 
-    public async Task<string> HaalUniekAdresIdOpAsync(string postcode, string huisnummer, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4")
+    public async Task<string> HaalUniekAdresIdOpAsync(string postcode, string huisnummer, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4", bool forceerVernieuwen = false)
     {
         var bestand = CacheBestand($"adresid_{companyCode}_{postcode}_{huisnummer}.json");
-        var gecached = LeesUitCache<string>(bestand);
-        if (gecached is not null) return gecached;
+        if (!forceerVernieuwen)
+        {
+            var gecached = LeesUitCache<string>(bestand);
+            if (gecached is not null) return gecached;
+        }
 
-        var uniekId = await _innerApi.HaalUniekAdresIdOpAsync(postcode, huisnummer, companyCode);
+        var uniekId = await _innerApi.HaalUniekAdresIdOpAsync(postcode, huisnummer, companyCode, forceerVernieuwen);
         SchrijfNaarCache(bestand, uniekId);
         return uniekId;
     }
 
     public async Task<IEnumerable<AfvalOphaalMoment>> HaalKalenderOpAsync(
-        string uniekAdresId, string postcode, string huisnummer, int jaar, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4")
+        string uniekAdresId, string postcode, string huisnummer, int jaar, string companyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4", bool forceerVernieuwen = false)
     {
         var bestand = CacheBestand($"kalender_{companyCode}_{postcode}_{huisnummer}_{jaar}.json");
-        var gecached = LeesUitCache<List<AfvalMomentDto>>(bestand);
-        if (gecached is not null)
-            return gecached.Select(DtoNaarMoment);
+        if (!forceerVernieuwen)
+        {
+            var gecached = LeesUitCache<List<AfvalMomentDto>>(bestand);
+            if (gecached is not null)
+                return gecached.Select(DtoNaarMoment);
+        }
 
-        var momenten = (await _innerApi.HaalKalenderOpAsync(uniekAdresId, postcode, huisnummer, jaar, companyCode)).ToList();
+        var momenten = (await _innerApi.HaalKalenderOpAsync(uniekAdresId, postcode, huisnummer, jaar, companyCode, forceerVernieuwen)).ToList();
         SchrijfNaarCache(bestand, momenten.Select(MomentNaarDto).ToList());
         return momenten;
     }
