@@ -40,6 +40,26 @@ public class EfAfvalRepository : IAfvalRepository
             }
         }
 
+        var entitiesWithEvents = _context.ChangeTracker.Entries<AfvalOphaalMoment>()
+            .Select(e => e.Entity)
+            .Where(e => e.DomainEvents.Any())
+            .ToList();
+
+        foreach (var entity in entitiesWithEvents)
+        {
+            foreach (var domainEvent in entity.DomainEvents)
+            {
+                var outboxMessage = new OutboxMessage
+                {
+                    EventType = domainEvent.GetType().FullName ?? domainEvent.GetType().Name,
+                    Content = Newtonsoft.Json.JsonConvert.SerializeObject(domainEvent),
+                    OccurredOn = domainEvent.OccurredOn
+                };
+                _context.OutboxMessages.Add(outboxMessage);
+            }
+            entity.ClearDomainEvents();
+        }
+
         await _context.SaveChangesAsync();
     }
 }

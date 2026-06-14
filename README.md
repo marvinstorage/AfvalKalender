@@ -84,9 +84,9 @@ De applicatie is opgezet volgens moderne software engineering principes, met een
 ### 1. Hexagonale Architectuur (Clean Architecture)
 We gebruiken een **Hexagonale Architectuur** (ook wel Ports & Adapters genoemd). Dit zorgt ervoor dat de kern van de applicatie (het Domein en de Applicatielaag) volledig onafhankelijk is van de gebruikersinterface, de database en de externe API's van afvalverwerkers.
 
--   **Domein Laag:** Bevat de pure business logica, entiteiten (`Adres`, `AfvalOphaalMoment`) en de definities van de uitgaande poorten (Interfaces). Geen externe afhankelijkheden.
+-   **Domein Laag:** Bevat de pure business logica, entiteiten (`Adres`, `AfvalOphaalMoment`), domein-events (`AfvalOphaalMomentToegevoegd`, `AfvalOphaalMomentGewijzigd`) en de definities van de uitgaande poorten (Interfaces). Geen externe afhankelijkheden.
 -   **Applicatie Laag:** Bevat de use-case orkestratie. We gebruiken een **Light CQRS** patroon met een hand-gerolde `ICommandHandler`. Dit vervangt complexe libraries zoals MediatR en biedt een duidelijke 'inbound port' voor alle interfaces. Een validatiedecorator (`ValidatingCommandHandlerDecorator`) valideert automatisch alle binnenkomende commando's op postcodeformaat, geldige GUID en overige parameters.
--   **Infrastructure Laag:** Bevat de concrete implementaties ('adapters') voor de buitenwereld, zoals de `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite) en de `IcsExporter`.
+-   **Infrastructure Laag:** Bevat de concrete implementaties ('adapters') voor de buitenwereld, zoals de `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite) en de `IcsExporter`. De repository implementeert tevens een transactionele **Outbox Pattern** (`OutboxMessage`) om domein-events betrouwbaar in de database te loggen tijdens ophaalschema-updates.
 -   **Presentation Laag:** De verschillende interfaces (Console, Desktop, Android) zijn slechts dunne schillen die commando's sturen naar de applicatielaag.
 
 ```mermaid

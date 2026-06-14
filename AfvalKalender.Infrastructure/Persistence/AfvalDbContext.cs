@@ -6,6 +6,7 @@ namespace AfvalKalender.Infrastructure.Persistence;
 public class AfvalDbContext : DbContext
 {
     public DbSet<AfvalOphaalMoment> AfvalOphaalMomenten { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
     public AfvalDbContext(DbContextOptions<AfvalDbContext> options) : base(options)
     {
@@ -20,6 +21,14 @@ public class AfvalDbContext : DbContext
             entity.Property(e => e.Datum).IsRequired();
             entity.Property(e => e.Postcode).IsRequired();
             entity.Property(e => e.Huisnummer).IsRequired();
+        });
+
+        modelBuilder.Entity<OutboxMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EventType).IsRequired();
+            entity.Property(e => e.Content).IsRequired();
+            entity.Property(e => e.OccurredOn).IsRequired();
         });
     }
 }
