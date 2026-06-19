@@ -33,9 +33,9 @@ The project follows **Hexagonal / Clean Architecture** principles, ensuring that
 
 **Dependency flow:** `Presentation` → `Application` → `Domain` ← `Infrastructure`
 
-- **Domain** (Core) — Contains business entities (`Adres`, `AfvalOphaalMoment`), value objects (`AfvalType`, `AfvalVerwerker`), and the **outbound port interfaces** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`). Zero NuGet dependencies.
+- **Domain** (Core) — Contains business entities (`Adres`, `AfvalOphaalMoment`), value objects (`AfvalType`, `AfvalVerwerker`), and the **outbound port interfaces** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IAfvalKalenderSynchronisator`). Zero NuGet dependencies.
 - **Application** (Core) — Implements use-case orchestration. Defines the **inbound port** (`ICommandHandler<TCommand, TResult>`) and its implementation (`VerwerkKalenderCommandHandler`). Orchestrates the workflow by calling outbound ports.
-- **Infrastructure** (Driven Adapters) — Concrete implementations of the outbound ports. Includes `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), and `CacherendeAfvalApi` (24h file-based cache decorator).
+- **Infrastructure** (Driven Adapters) — Concrete implementations of the outbound ports. Includes `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24h file-based cache decorator), and `WebDavSyncAdapter` (HTTP PUT to a WebDAV/CalDAV endpoint).
 - **Presentation** (Driving Adapters) — Entry points: `ConsoleUI` (ANSI/CLI), `DesktopUI` (Avalonia/GUI), and `AndroidUI` (MAUI). All UIs are decoupled from application logic, interacting only through the `ICommandHandler` interface.
 
 ```
@@ -57,7 +57,8 @@ The project follows **Hexagonal / Clean Architecture** principles, ensuring that
 │  ValueObjects: AfvalType, Verwerker  │  TwenteMilieuApi     │
 │  Interfaces (Outbound Ports):        │  EfAfvalRepository   │
 │    IAfvalApi, IAfvalRepository,      │  IcsExporter         │
-│    IIcsExporter                      │  CacherendeAfvalApi  │
+│    IIcsExporter,                     │  CacherendeAfvalApi  │
+│    IAfvalKalenderSynchronisator      │  WebDavSyncAdapter   │
 └──────────────────────────────────────┴──────────────────────┘
 ```
 
@@ -86,6 +87,7 @@ Both UIs resolve the handler via Dependency Injection, allowing for easy testing
 - **Idempotent Updates**: Scheduling changes are detected by comparing descriptions; only changed records trigger a `LaatstGewijzigd` update.
 - **MAUI 10 / Android 16 Readiness**: `AndroidUI` uses modern `CreateWindow` patterns and compiled bindings (`x:DataType`) for performance.
 - **API Caching**: `CacherendeAfvalApi` decorates the API port to provide 24-hour file-based caching, respecting the `companyCode` for multi-provider support.
+- **WebDAV Sync**: `WebDavSyncAdapter` implements `IAfvalKalenderSynchronisator`. It generates a temporary ICS file via `IIcsExporter`, then uploads it to any WebDAV/CalDAV server using an HTTP PUT request with optional Basic Authentication. Temporary files are cleaned up in a `finally` block to guarantee no leaks.
 
 ## Multi-Disciplinaire Teamlens
 
@@ -124,9 +126,10 @@ Order of preference:
 
 - **Frameworks**: xUnit · FluentAssertions · Moq · EF Core InMemory (repo tests) · Avalonia.Headless.XUnit (VM tests)
 - **Test name format**: `Method_Scenario_ExpectedResult` in Dutch (e.g., `Constructor_MetGeldigeData_ZouAdresMoetenAanmaken`)
-- **Mocking**: mock outbound ports (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`) via Moq; never mock domain entities
+- **Mocking**: mock outbound ports (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IAfvalKalenderSynchronisator`) via Moq; never mock domain entities
 - **Repository tests** use EF Core InMemory; **ViewModel tests** use `Avalonia.Headless` with a mocked `ICommandHandler<,>`
 - **Handler tests** mock the three outbound ports (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`) and test the handler directly
+- **Sync adapter tests** use `Moq.Protected` to intercept `HttpMessageHandler.SendAsync`, verifying PUT method, URI, Basic Auth header, and response error propagation
 
 ## Architecture Decision Records
 
@@ -148,3 +151,23 @@ Both UIs depend only on the interface. The handler is registered in DI.
 - Cross-cutting concerns (logging, caching, validation) can be added as handler decorators without touching either UI or the handler itself
 - Handler is straightforward to test in isolation — mock the three outbound ports, call `HandleAsync`
 - No MediatR dependency; the pattern fits in ~30 lines of framework code
+
+### ADR-002 — WebDAV/CalDAV sync via IAfvalKalenderSynchronisator
+
+**Status:** Accepted
+
+**Context:** Users want to push their waste collection calendar directly to a remote CalDAV server (e.g., Nextcloud, Baikal, Radicale) rather than importing a static `.ics` file each time. The sync operation is a secondary, optional output channel that sits alongside the existing file export.
+
+**Decision:** Introduce a new outbound port `IAfvalKalenderSynchronisator` in the Domain layer, with a single method `SynchroniseerAsync`. Implement it as `WebDavSyncAdapter` in the Infrastructure layer. The adapter:
+1. Delegates ICS generation to the existing `IIcsExporter` (writing to a temp file).
+2. Reads the generated ICS content and sends it as a `text/calendar` HTTP PUT to the supplied WebDAV URL.
+3. Optionally attaches a Basic Auth header when credentials are provided.
+4. Always deletes the temp file in a `finally` block.
+
+All three UIs register the adapter via `AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()` with the same SSL bypass handler used for the Ximmio API.
+
+**Consequences:**
+- Any WebDAV/CalDAV server (Nextcloud, Baikal, Radicale, iCloud, etc.) is supported without additional dependencies.
+- The sync port is independently injectable and testable — `IIcsExporter` and `HttpMessageHandler` are mocked separately.
+- Credentials are passed at call time; no persistent credential store is introduced.
+- Future HTTPS-only enforcement or OAuth can be added as a decorator without changing the adapter.

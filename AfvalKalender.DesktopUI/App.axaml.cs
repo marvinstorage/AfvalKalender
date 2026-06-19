@@ -11,6 +11,7 @@ using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
 using AfvalKalender.Infrastructure.Persistence;
+using AfvalKalender.Infrastructure.Sync;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -66,6 +67,11 @@ public partial class App : Avalonia.Application
             
         services.AddScoped<IAfvalRepository, EfAfvalRepository>();
         services.AddScoped<IIcsExporter, IcsExporter>();
+        services.AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()
+            .ConfigurePrimaryHttpMessageHandler(() => new System.Net.Http.HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = System.Net.Http.HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            });
 
         // Application
         services.AddScoped<ICommandValidator<VerwerkKalenderCommand>, VerwerkKalenderCommandValidator>();

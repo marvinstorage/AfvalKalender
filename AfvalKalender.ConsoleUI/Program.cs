@@ -6,6 +6,7 @@ using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
 using AfvalKalender.Infrastructure.Persistence;
+using AfvalKalender.Infrastructure.Sync;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,6 +27,11 @@ var host = Host.CreateDefaultBuilder(args)
             new CacherendeAfvalApi(sp.GetRequiredService<TwenteMilieuApi>(), "apicache"));
         services.AddScoped<IAfvalRepository, EfAfvalRepository>();
         services.AddScoped<IIcsExporter, IcsExporter>();
+        services.AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            });
 
         // Application
         services.AddScoped<ICommandValidator<VerwerkKalenderCommand>, VerwerkKalenderCommandValidator>();
