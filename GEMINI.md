@@ -25,6 +25,20 @@ dotnet test AfvalKalender.UnitTests --filter "FullyQualifiedName~AdresTests.Cons
 # Publish self-contained executables
 dotnet publish -c Release -r win-x64 --self-contained
 dotnet publish -c Release -r linux-x64 --self-contained
+
+# Build Android APK (requires Android SDK + JDK installed locally)
+# AndroidSdkDirectory = path to your Android SDK root
+# JavaSdkDirectory    = path to your JDK 21 installation
+dotnet build-server shutdown && dotnet publish AfvalKalender.AndroidUI \
+  -c Release \
+  -f net10.0-android \
+  -p:RuntimeIdentifier=android-arm64 \
+  -p:AndroidPackageFormat=apk \
+  -p:AndroidKeyStore=false \
+  -p:SkipUsingBuiltInWorkloads=true \
+  -p:NoWarn=NU1605 \
+  -p:AndroidSdkDirectory=$HOME/.android/sks \
+  -p:JavaSdkDirectory=/usr/lib/jvm/java-21-openjdk-amd64
 ```
 
 ## Architecture & Layer Rules
