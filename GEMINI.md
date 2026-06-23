@@ -186,3 +186,16 @@ All three UIs register the adapter via `AddHttpClient<IAfvalKalenderSynchronisat
 - The sync port is independently injectable and testable — `IIcsExporter` and `HttpMessageHandler` are mocked separately.
 - Credentials are passed at call time; no persistent credential store is introduced.
 - Future HTTPS-only enforcement or OAuth can be added as a decorator without changing the adapter.
+
+### ADR-006 — OAuth2 Synchronization via Native Cloud APIs (Google & Microsoft)
+
+**Status:** Proposed
+
+**Context:** Users want to sync to Google Calendar and Office 365, but these providers block standard WebDAV/Basic Auth and require OAuth2 and proprietary REST APIs.
+
+**Decision:** We propose introducing specific `IAfvalKalenderSynchronisator` implementations (`GoogleCalendarSyncAdapter` and `MicrosoftGraphSyncAdapter`) that use OAuth2 flows to authenticate and push events directly to these cloud calendars.
+
+**Consequences:**
+- Seamless experience for the majority of users.
+- Increases application complexity due to OAuth2 flows across Console, Desktop, and Android UIs.
+- Requires registering the application with Google and Microsoft to obtain OAuth2 client IDs.

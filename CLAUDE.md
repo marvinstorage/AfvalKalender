@@ -384,6 +384,7 @@ All ADRs live in [`docs/adr/`](docs/adr/).
 | [ADR-003](docs/adr/ADR-003-command-validation-decorator.md) | Command Validation via Decorator Pipeline | Accepted |
 | [ADR-004](docs/adr/ADR-004-domain-events-outbox.md) | Domain Events and Transactional Outbox Pattern | Accepted |
 | [ADR-005](docs/adr/ADR-005-api-cache-decorator.md) | 24-Hour File-Based API Cache with ForceerVernieuwen Bypass | Accepted |
+| [ADR-006](docs/adr/ADR-006-oauth2-calendar-apis.md) | OAuth2 Synchronization via Native Cloud APIs (Google & Microsoft) | Proposed |
 
 ---
 
