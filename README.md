@@ -14,6 +14,7 @@ De applicatie automatiseert het proces van het bijhouden van de afvalkalender. I
 -   **Lokale Database:** Slaat ophaalmomenten op in een SQLite database.
 -   **Update Logica:** Herkent wijzigingen in het ophaalschema en werkt deze bij, inclusief een tijdstempel van de laatste wijziging.
 -   **ICS Export & Share:** Genereert een `.ics` bestand of deelt deze direct met je agenda-app op mobiel.
+-   **WebDAV / CalDAV Sync:** Directe synchronisatie naar je Google Calendar, iCloud, Nextcloud, of Office 365.
 -   **Aanpasbare Reminders:** Stel zelf in hoeveel uur van tevoren je een melding wilt krijgen.
 -   **Nederlandstalig:** De interface en kalender-omschrijvingen zijn volledig in het Nederlands.
 -   **Groene Recycle Branding:** Een frisse, herkenbare interface met recycle-icoon.
@@ -187,8 +188,12 @@ sequenceDiagram
     DB-->>App: Database bijgewerkt & LaatstGewijzigd getrackt
     App->>ICS: ExporteerAsync(momenten, bestandspad)
     ICS-->>App: ICS bestand aangemaakt (met herinneringen)
+    opt WebDAV / CalDAV Url aanwezig
+        App->>WebDAV: HTTP PUT met ICS data
+        WebDAV-->>App: Succesvol gesynchroniseerd
+    end
     App-->>UI: Succes melding
-    UI-->>User: Toont clickable link naar ICS bestand
+    UI-->>User: Toont clickable link naar ICS bestand of sync succes
 ```
 
 ### 4. Domain Driven Design (DDD) & Event Storming

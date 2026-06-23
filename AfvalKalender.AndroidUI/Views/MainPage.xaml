@@ -56,6 +56,24 @@
                 </VerticalStackLayout>
             </Grid>
 
+            <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,10" />
+            <Label Text="WebDAV / CalDAV Sync (Optioneel)" FontAttributes="Bold" />
+
+            <VerticalStackLayout Spacing="5">
+                <Label Text="WebDAV URL" />
+                <Entry Text="{Binding WebDavUrl}" Placeholder="https://caldav.domein.nl" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Gebruikersnaam" />
+                <Entry Text="{Binding WebDavGebruiker}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Wachtwoord" />
+                <Entry Text="{Binding WebDavWachtwoord}" IsPassword="True" />
+            </VerticalStackLayout>
+
             <Button Text="Exporteren &amp; Delen"
                     Command="{Binding VerwerkCommand}"
                     IsEnabled="{Binding IsBezig, Converter={StaticResource InverseBoolConverter}}"

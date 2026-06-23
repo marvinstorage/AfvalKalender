@@ -32,6 +32,15 @@ public partial class MainPageViewModel : ObservableObject
     private int _herinneringUur = 13;
 
     [ObservableProperty]
+    private string _webDavUrl = string.Empty;
+
+    [ObservableProperty]
+    private string _webDavGebruiker = string.Empty;
+
+    [ObservableProperty]
+    private string _webDavWachtwoord = string.Empty;
+
+    [ObservableProperty]
     private string _statusBericht = "Klaar voor gebruik";
 
     [ObservableProperty]
@@ -87,7 +96,7 @@ public partial class MainPageViewModel : ObservableObject
             
             string fullPath = Path.Combine(cacheDir, fileName);
             
-            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, fullPath, GeselecteerdeVerwerker.CompanyCode);
+            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, fullPath, GeselecteerdeVerwerker.CompanyCode, false, WebDavUrl, WebDavGebruiker, WebDavWachtwoord);
             var momenten = await _handler.HandleAsync(command);
 
             OutputBestandPad = fullPath;

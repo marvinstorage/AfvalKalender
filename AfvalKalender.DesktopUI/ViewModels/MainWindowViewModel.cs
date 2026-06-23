@@ -31,6 +31,15 @@ public partial class MainWindowViewModel : ViewModelBase
     private int _herinneringUur = 13;
 
     [ObservableProperty]
+    private string _webDavUrl = string.Empty;
+
+    [ObservableProperty]
+    private string _webDavGebruiker = string.Empty;
+
+    [ObservableProperty]
+    private string _webDavWachtwoord = string.Empty;
+
+    [ObservableProperty]
     private string _statusBericht = "Klaar voor gebruik";
 
     [ObservableProperty]
@@ -93,7 +102,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             string postcode = Postcode.ToUpper().Replace(" ", "");
             string outputBestand = $"AfvalKalender_{postcode}_{Huisnummer}_{Jaar}.ics";
-            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, outputBestand, GeselecteerdeVerwerker.CompanyCode);
+            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, outputBestand, GeselecteerdeVerwerker.CompanyCode, false, WebDavUrl, WebDavGebruiker, WebDavWachtwoord);
             var momenten = await _handler.HandleAsync(command);
 
             OutputBestandPad = System.IO.Path.GetFullPath(outputBestand);

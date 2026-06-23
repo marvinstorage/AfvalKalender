@@ -87,11 +87,12 @@ Both UIs resolve the handler via Dependency Injection, allowing for easy testing
 
 ### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
 
-1. Receives `VerwerkKalenderCommand` (postcode, huisnummer, jaar, herinneringUur, outputPad, companyCode).
+1. Receives `VerwerkKalenderCommand` (postcode, huisnummer, jaar, herinneringUur, outputPad, companyCode, webDavUrl, etc.).
 2. `IAfvalApi.HaalUniekAdresIdOpAsync` → Fetches the internal Ximmio `UniqueId`.
 3. `IAfvalApi.HaalKalenderOpAsync` → Retrieves collection dates for the year.
 4. `IAfvalRepository.SlaOpOfUpdateAsync` → Persists to SQLite, tracking `LaatstGewijzigd` for changes.
 5. `IIcsExporter.ExporteerAsync` → Generates the `.ics` file with relative reminder triggers.
+6. `IAfvalKalenderSynchronisator.SynchroniseerAsync` → (Optional) Pushes the calendar to a WebDAV endpoint if a URL was provided.
 
 ### Key design decisions
 

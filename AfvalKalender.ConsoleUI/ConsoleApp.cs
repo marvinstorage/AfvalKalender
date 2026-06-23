@@ -63,12 +63,26 @@ public class ConsoleApp
         Console.Write("Hoeveel uur van tevoren wilt u een herinnering? (bijv. 13): ");
         if (!int.TryParse(Console.ReadLine(), out int herinneringUur)) herinneringUur = 13;
 
+        Console.Write("\nOptioneel: WebDAV / CalDAV synchronisatie\n");
+        Console.Write("WebDAV URL (laat leeg om over te slaan): ");
+        string webDavUrl = Console.ReadLine() ?? "";
+        
+        string webDavGebruiker = "";
+        string webDavWachtwoord = "";
+        if (!string.IsNullOrWhiteSpace(webDavUrl))
+        {
+            Console.Write("Gebruikersnaam: ");
+            webDavGebruiker = Console.ReadLine() ?? "";
+            Console.Write("Wachtwoord: ");
+            webDavWachtwoord = Console.ReadLine() ?? "";
+        }
+
         string outputBestand = $"AfvalKalender_{postcode}_{huisnummer}_{jaar}.ics";
 
         try
         {
             Console.WriteLine("\nBezig met ophalen en verwerken van data...");
-            var command = new VerwerkKalenderCommand(postcode, huisnummer, jaar, herinneringUur, outputBestand, geselecteerdeVerwerker.CompanyCode);
+            var command = new VerwerkKalenderCommand(postcode, huisnummer, jaar, herinneringUur, outputBestand, geselecteerdeVerwerker.CompanyCode, false, webDavUrl, webDavGebruiker, webDavWachtwoord);
             var momenten = await _handler.HandleAsync(command);
 
             string absolutePath = Path.GetFullPath(outputBestand);

@@ -7,4 +7,7 @@ public record VerwerkKalenderCommand(
     int HerinneringUur,
     string OutputPad,
     string CompanyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4",
-    bool ForceerVernieuwen = false);
+    bool ForceerVernieuwen = false,
+    string? WebDavUrl = null,
+    string? WebDavGebruiker = null,
+    string? WebDavWachtwoord = null);

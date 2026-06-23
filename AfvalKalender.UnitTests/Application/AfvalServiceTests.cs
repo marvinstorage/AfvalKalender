@@ -13,9 +13,10 @@ public class VerwerkKalenderCommandHandlerTests
     private readonly Mock<IAfvalApi> _mockApi = new();
     private readonly Mock<IAfvalRepository> _mockRepo = new();
     private readonly Mock<IIcsExporter> _mockIcs = new();
+    private readonly Mock<IAfvalKalenderSynchronisator> _mockSync = new();
 
     private VerwerkKalenderCommandHandler MaakHandler() =>
-        new(_mockApi.Object, _mockRepo.Object, _mockIcs.Object);
+        new(_mockApi.Object, _mockRepo.Object, _mockIcs.Object, _mockSync.Object);
 
     [Fact]
     public async Task HandleAsync_ZouJuisteVolgordeMoetenAanhouden()
@@ -79,5 +80,34 @@ public class VerwerkKalenderCommandHandlerTests
         // Assert — all command values are forwarded correctly
         _mockApi.Verify(x => x.HaalKalenderOpAsync("xyz", "9999ZZ", "99", 2027), Times.Once);
         _mockIcs.Verify(x => x.ExporteerAsync(momenten, "output.ics", 8), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MetWebDavUrl_ZouSynchronisatorMoetenAanroepen()
+    {
+        // Arrange
+        var momenten = new List<AfvalOphaalMoment> { new(AfvalType.GRIJS, DateTime.Now, "Test", "1234AB", "10") };
+        _mockRepo.Setup(x => x.HaalOpVoorAdresEnJaarAsync("1234AB", "10", 2026)).ReturnsAsync(momenten);
+
+        var command = new VerwerkKalenderCommand("1234AB", "10", 2026, 13, "test.ics", "company", false, "https://dav", "user", "pass");
+
+        // Act
+        await MaakHandler().HandleAsync(command);
+
+        // Assert
+        _mockSync.Verify(x => x.SynchroniseerAsync(momenten, "https://dav", "user", "pass", 13), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ZonderWebDavUrl_ZouSynchronisatorNietMoetenAanroepen()
+    {
+        // Arrange
+        var command = new VerwerkKalenderCommand("1234AB", "10", 2026, 13, "test.ics");
+
+        // Act
+        await MaakHandler().HandleAsync(command);
+
+        // Assert
+        _mockSync.Verify(x => x.SynchroniseerAsync(It.IsAny<IEnumerable<AfvalOphaalMoment>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()), Times.Never);
     }
 }

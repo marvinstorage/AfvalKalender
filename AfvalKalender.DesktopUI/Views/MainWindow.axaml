@@ -9,7 +9,7 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="AfvalKalender Exporteur"
-        Width="450" Height="630"
+        Width="450" Height="800"
         WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
@@ -68,6 +68,24 @@
         <StackPanel Spacing="5">
             <TextBlock Text="Herinnering (uren vooraf)"/>
             <NumericUpDown Value="{Binding HerinneringUur}" Minimum="0" Maximum="48"/>
+        </StackPanel>
+
+        <Separator Height="2" Margin="0,5"/>
+        <TextBlock Text="WebDAV / CalDAV Sync (Optioneel)" FontWeight="Bold" />
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="WebDAV URL (bijv. https://caldav.domein.nl)"/>
+            <TextBox Text="{Binding WebDavUrl}" PlaceholderText="Laat leeg om alleen lokaal te exporteren"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Gebruikersnaam"/>
+            <TextBox Text="{Binding WebDavGebruiker}" />
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Wachtwoord / App-specifiek wachtwoord"/>
+            <TextBox Text="{Binding WebDavWachtwoord}" PasswordChar="*" />
         </StackPanel>
 
         <Button Command="{Binding VerwerkCommand}" 

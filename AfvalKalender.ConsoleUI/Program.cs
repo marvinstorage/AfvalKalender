@@ -15,8 +15,12 @@ var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         // Infrastructure
+        // Get the absolute path to the project root
+        var projectRoot = Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName;
+        var dbPath = Path.Combine(projectRoot, "afvalkalender.db");
+
         services.AddDbContext<AfvalDbContext>(options =>
-            options.UseSqlite("Data Source=afvalkalender.db"));
+            options.UseSqlite($"Data Source={dbPath}"));
 
         services.AddHttpClient<TwenteMilieuApi>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler

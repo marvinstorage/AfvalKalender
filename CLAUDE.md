@@ -199,6 +199,9 @@ VerwerkKalenderCommandValidator             ← validates postcode, jaar, GUID, 
 | `OutputPad` | `string` | — | Required (non-whitespace) |
 | `CompanyCode` | `string` | Twente Milieu GUID | Must be a parseable `Guid` |
 | `ForceerVernieuwen` | `bool` | `false` | Bypass 24-hour API cache |
+| `WebDavUrl` | `string?` | `null` | Optional WebDAV destination |
+| `WebDavGebruiker` | `string?` | `null` | Optional WebDAV basic auth username |
+| `WebDavWachtwoord`| `string?` | `null` | Optional WebDAV basic auth password |
 
 ### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
 
@@ -236,12 +239,14 @@ sequenceDiagram
     App->>DB: SlaOpOfUpdateAsync(momenten)
     Note over DB: Domain events → OutboxMessages (atomisch)
     DB-->>App: Opgeslagen
-    App->>DB: HaalOpVoorAdresEnJaarAsync(postcode, huisnummer, jaar)
     DB-->>App: Persisteerde momenten
     App->>ICS: ExporteerAsync(momenten, outputPad, herinneringUur)
     ICS-->>App: .ics bestand aangemaakt
+    opt WebDAV Url is present
+        App->>SyncAdapter: SynchroniseerAsync()
+    end
     App-->>UI: IReadOnlyList<AfvalOphaalMoment>
-    UI-->>User: Toont link naar .ics bestand
+    UI-->>User: Toont link naar .ics bestand / sync succes
 ```
 
 ---

@@ -1,6 +1,6 @@
 # ADR-002 — WebDAV/CalDAV sync via IAfvalKalenderSynchronisator
 
-**Status:** Accepted  
+**Status:** Implemented (Accepted on 2026-06-19, UI integration completed)  
 **Date:** 2026-06-19  
 **Deciders:** Marvin Storage
 
