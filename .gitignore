@@ -476,10 +476,10 @@ $RECYCLE.BIN/
 *.msix
 *.msm
 *.msp
-
-# Windows shortcuts
-*.lnk
-
-# Vim temporary swap files
 *.swp
 *.db
+
+# Application specific ignores
+apicache/
+*.ics
+
