@@ -1,3 +1,5 @@
+using AfvalKalender.Domain.ValueObjects;
+
 namespace AfvalKalender.Application.Commands;
 
 public record VerwerkKalenderCommand(
@@ -8,6 +10,7 @@ public record VerwerkKalenderCommand(
     string OutputPad,
     string CompanyCode = "8d97bb56-5afd-4cbc-a651-b4f7314264b4",
     bool ForceerVernieuwen = false,
-    string? WebDavUrl = null,
-    string? WebDavGebruiker = null,
-    string? WebDavWachtwoord = null);
+    SyncProvider SyncProvider = SyncProvider.Geen,
+    string? SyncDoelUrlOfToken = null,
+    string? SyncGebruiker = null,
+    string? SyncWachtwoord = null);

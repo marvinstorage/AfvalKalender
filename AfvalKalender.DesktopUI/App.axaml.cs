@@ -1,12 +1,15 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using System.Net.Http;
 using AfvalKalender.DesktopUI.ViewModels;
 using AfvalKalender.DesktopUI.Views;
 using Microsoft.Extensions.DependencyInjection;
 using AfvalKalender.Application.Commands;
+using AfvalKalender.Domain.Services;
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
+using AfvalKalender.Domain.Services;
 using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
@@ -68,10 +71,13 @@ public partial class App : Avalonia.Application
         services.AddScoped<IAfvalRepository, EfAfvalRepository>();
         services.AddScoped<IIcsExporter, IcsExporter>();
         services.AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()
-            .ConfigurePrimaryHttpMessageHandler(() => new System.Net.Http.HttpClientHandler
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
-                ServerCertificateCustomValidationCallback = System.Net.Http.HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
             });
+        services.AddHttpClient<IAfvalKalenderSynchronisator, GoogleCalendarSyncAdapter>();
+        services.AddHttpClient<IAfvalKalenderSynchronisator, MicrosoftGraphSyncAdapter>();
+        services.AddTransient<KalenderSynchronisatieService>();
 
         // Application
         services.AddScoped<ICommandValidator<VerwerkKalenderCommand>, VerwerkKalenderCommandValidator>();

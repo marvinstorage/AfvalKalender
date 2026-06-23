@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using AfvalKalender.Application.Commands;
+using AfvalKalender.Domain.Services;
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
+using AfvalKalender.Domain.Services;
 using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
@@ -47,10 +49,13 @@ public static class MauiProgram
 		builder.Services.AddScoped<IAfvalRepository, EfAfvalRepository>();
 		builder.Services.AddScoped<IIcsExporter, IcsExporter>();
 		builder.Services.AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()
-			.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-			{
-				ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-			});
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            });
+        builder.Services.AddHttpClient<IAfvalKalenderSynchronisator, GoogleCalendarSyncAdapter>();
+        builder.Services.AddHttpClient<IAfvalKalenderSynchronisator, MicrosoftGraphSyncAdapter>();
+        builder.Services.AddTransient<KalenderSynchronisatieService>();
 
 		// Application
 		builder.Services.AddScoped<ICommandValidator<VerwerkKalenderCommand>, VerwerkKalenderCommandValidator>();

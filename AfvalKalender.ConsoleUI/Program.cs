@@ -1,7 +1,9 @@
 using AfvalKalender.Application.Commands;
+using AfvalKalender.Domain.Services;
 using AfvalKalender.ConsoleUI;
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
+using AfvalKalender.Domain.Services;
 using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
@@ -10,6 +12,7 @@ using AfvalKalender.Infrastructure.Sync;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Net.Http;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
@@ -34,8 +37,11 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
             });
+        services.AddHttpClient<IAfvalKalenderSynchronisator, GoogleCalendarSyncAdapter>();
+        services.AddHttpClient<IAfvalKalenderSynchronisator, MicrosoftGraphSyncAdapter>();
+        services.AddTransient<KalenderSynchronisatieService>();
 
         // Application
         services.AddScoped<ICommandValidator<VerwerkKalenderCommand>, VerwerkKalenderCommandValidator>();

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AfvalKalender.Application.Commands;
+using AfvalKalender.Domain.ValueObjects;
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.ValueObjects;
 using System;
@@ -102,7 +103,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             string postcode = Postcode.ToUpper().Replace(" ", "");
             string outputBestand = $"AfvalKalender_{postcode}_{Huisnummer}_{Jaar}.ics";
-            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, outputBestand, GeselecteerdeVerwerker.CompanyCode, false, WebDavUrl, WebDavGebruiker, WebDavWachtwoord);
+            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, outputBestand, GeselecteerdeVerwerker.CompanyCode, false, string.IsNullOrWhiteSpace(WebDavUrl) ? SyncProvider.Geen : SyncProvider.WebDav, WebDavUrl, WebDavGebruiker, WebDavWachtwoord);
             var momenten = await _handler.HandleAsync(command);
 
             OutputBestandPad = System.IO.Path.GetFullPath(outputBestand);

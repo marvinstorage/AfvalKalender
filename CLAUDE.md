@@ -259,7 +259,9 @@ sequenceDiagram
 | `CacherendeAfvalApi` | `IAfvalApi` | Decorator | 24h file cache; `companyCode` in filename; injectable clock for tests. See [ADR-005](docs/adr/ADR-005-api-cache-decorator.md). |
 | `EfAfvalRepository` | `IAfvalRepository` | Repository + Outbox | Upserts entities; harvests domain events into `OutboxMessages` in same transaction. See [ADR-004](docs/adr/ADR-004-domain-events-outbox.md). |
 | `IcsExporter` | `IIcsExporter` | File writer | Writes RFC 5545 `.ics` using Ical.Net; UIDs scoped per `type+date+postcode`. |
-| `WebDavSyncAdapter` | `IAfvalKalenderSynchronisator` | HTTP Client | Generates temp ICS, HTTP PUTs to CalDAV server with optional Basic Auth. See [ADR-002](docs/adr/ADR-002-webdav-caldav-sync.md). |
+| `WebDavSyncAdapter` | `IAfvalKalenderSynchronisator` | HTTP Client | Generates temp ICS, HTTP PUTs to CalDAV server with optional Basic Auth. |
+| `GoogleCalendarSyncAdapter` | `IAfvalKalenderSynchronisator` | HTTP Client | Syncs to Google Calendar via OAuth2 APIs. |
+| `MicrosoftGraphSyncAdapter` | `IAfvalKalenderSynchronisator` | HTTP Client | Syncs to MS Graph via OAuth2 APIs. |
 
 ---
 

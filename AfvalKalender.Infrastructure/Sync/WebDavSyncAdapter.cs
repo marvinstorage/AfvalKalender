@@ -1,5 +1,6 @@
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
+using AfvalKalender.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,15 +22,15 @@ public class WebDavSyncAdapter : IAfvalKalenderSynchronisator
         _icsExporter = icsExporter;
     }
 
+    public bool Ondersteunt(SyncProvider provider) => provider == SyncProvider.WebDav;
+
     public async Task SynchroniseerAsync(
         IEnumerable<AfvalOphaalMoment> momenten, 
-        string webDavUrl, 
-        string gebruikersnaam, 
-        string wachtwoord, 
+        SyncConfiguratie configuratie, 
         int herinneringUur)
     {
-        if (string.IsNullOrWhiteSpace(webDavUrl))
-            throw new ArgumentException("WebDAV URL mag niet leeg zijn.", nameof(webDavUrl));
+        if (string.IsNullOrWhiteSpace(configuratie.DoelUrlOfToken))
+            throw new ArgumentException("WebDAV URL mag niet leeg zijn.", nameof(configuratie.DoelUrlOfToken));
 
         // Genereer tijdelijk bestand om de ICS content te krijgen
         var tijdelijkBestand = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.ics");
@@ -38,12 +39,12 @@ public class WebDavSyncAdapter : IAfvalKalenderSynchronisator
             await _icsExporter.ExporteerAsync(momenten, tijdelijkBestand, herinneringUur);
             var icsInhoud = await File.ReadAllTextAsync(tijdelijkBestand);
 
-            using var request = new HttpRequestMessage(HttpMethod.Put, webDavUrl);
+            using var request = new HttpRequestMessage(HttpMethod.Put, configuratie.DoelUrlOfToken);
             
             // Stel Basic Authentication in
-            if (!string.IsNullOrEmpty(gebruikersnaam))
+            if (!string.IsNullOrEmpty(configuratie.Gebruikersnaam))
             {
-                var authBytes = Encoding.UTF8.GetBytes($"{gebruikersnaam}:{wachtwoord}");
+                var authBytes = Encoding.UTF8.GetBytes($"{configuratie.Gebruikersnaam}:{configuratie.Wachtwoord}");
                 request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
             }
             

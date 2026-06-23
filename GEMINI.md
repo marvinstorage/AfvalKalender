@@ -47,9 +47,9 @@ The project follows **Hexagonal / Clean Architecture** principles, ensuring that
 
 **Dependency flow:** `Presentation` → `Application` → `Domain` ← `Infrastructure`
 
-- **Domain** (Core) — Contains business entities (`Adres`, `AfvalOphaalMoment`), value objects (`AfvalType`, `AfvalVerwerker`), and the **outbound port interfaces** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IAfvalKalenderSynchronisator`). Zero NuGet dependencies.
+- **Domain** (Core) — Contains business entities (`Adres`, `AfvalOphaalMoment`), value objects (`AfvalType`, `AfvalVerwerker`), and the **outbound port interfaces** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IAfvalKalenderSynchronisator`) and **domain services** (`KalenderSynchronisatieService`). Zero NuGet dependencies.
 - **Application** (Core) — Implements use-case orchestration. Defines the **inbound port** (`ICommandHandler<TCommand, TResult>`) and its implementation (`VerwerkKalenderCommandHandler`). Orchestrates the workflow by calling outbound ports.
-- **Infrastructure** (Driven Adapters) — Concrete implementations of the outbound ports. Includes `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24h file-based cache decorator), and `WebDavSyncAdapter` (HTTP PUT to a WebDAV/CalDAV endpoint).
+- **Infrastructure** (Driven Adapters) — Concrete implementations of the outbound ports. Includes `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24h file-based cache decorator), and `WebDavSyncAdapter`, `GoogleCalendarSyncAdapter`, and `MicrosoftGraphSyncAdapter`.
 - **Presentation** (Driving Adapters) — Entry points: `ConsoleUI` (ANSI/CLI), `DesktopUI` (Avalonia/GUI), and `AndroidUI` (MAUI). All UIs are decoupled from application logic, interacting only through the `ICommandHandler` interface.
 
 ```
@@ -68,11 +68,13 @@ The project follows **Hexagonal / Clean Architecture** principles, ensuring that
 ┌──────────────────────────────────────┬──────────────────────┐
 │  Domain (Core Business Logic)        │  Infrastructure      │
 │  Entities: Adres, AfvalOphaalMoment  │  (Driven Adapters)   │
-│  ValueObjects: AfvalType, Verwerker  │  TwenteMilieuApi     │
-│  Interfaces (Outbound Ports):        │  EfAfvalRepository   │
-│    IAfvalApi, IAfvalRepository,      │  IcsExporter         │
-│    IIcsExporter,                     │  CacherendeAfvalApi  │
-│    IAfvalKalenderSynchronisator      │  WebDavSyncAdapter   │
+│  ValueObjects: SyncConfiguratie      │  TwenteMilieuApi     │
+│  Services: KalenderSynchronisatieSvc │  EfAfvalRepository   │
+│  Interfaces (Outbound Ports):        │  IcsExporter         │
+│    IAfvalApi, IAfvalRepository,      │  CacherendeAfvalApi  │
+│    IIcsExporter,                     │  WebDavSyncAdapter   │
+│    IAfvalKalenderSynchronisator      │  GoogleCalendarSync..│
+│                                      │  MicrosoftGraphSync..│
 └──────────────────────────────────────┴──────────────────────┘
 ```
 
@@ -92,7 +94,7 @@ Both UIs resolve the handler via Dependency Injection, allowing for easy testing
 3. `IAfvalApi.HaalKalenderOpAsync` → Retrieves collection dates for the year.
 4. `IAfvalRepository.SlaOpOfUpdateAsync` → Persists to SQLite, tracking `LaatstGewijzigd` for changes.
 5. `IIcsExporter.ExporteerAsync` → Generates the `.ics` file with relative reminder triggers.
-6. `IAfvalKalenderSynchronisator.SynchroniseerAsync` → (Optional) Pushes the calendar to a WebDAV endpoint if a URL was provided.
+6. `KalenderSynchronisatieService.SynchroniseerAsync` → Orchestrates syncing the calendar via the correct `IAfvalKalenderSynchronisator` (WebDAV, Google, Microsoft) based on the `SyncProvider` in the command.
 
 ### Key design decisions
 

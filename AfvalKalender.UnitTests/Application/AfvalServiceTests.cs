@@ -1,6 +1,7 @@
 using AfvalKalender.Application.Commands;
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
+using AfvalKalender.Domain.Services;
 using AfvalKalender.Domain.ValueObjects;
 using FluentAssertions;
 using Moq;
@@ -16,7 +17,7 @@ public class VerwerkKalenderCommandHandlerTests
     private readonly Mock<IAfvalKalenderSynchronisator> _mockSync = new();
 
     private VerwerkKalenderCommandHandler MaakHandler() =>
-        new(_mockApi.Object, _mockRepo.Object, _mockIcs.Object, _mockSync.Object);
+        new(_mockApi.Object, _mockRepo.Object, _mockIcs.Object, new KalenderSynchronisatieService(new[] { _mockSync.Object }));
 
     [Fact]
     public async Task HandleAsync_ZouJuisteVolgordeMoetenAanhouden()
@@ -89,13 +90,14 @@ public class VerwerkKalenderCommandHandlerTests
         var momenten = new List<AfvalOphaalMoment> { new(AfvalType.GRIJS, DateTime.Now, "Test", "1234AB", "10") };
         _mockRepo.Setup(x => x.HaalOpVoorAdresEnJaarAsync("1234AB", "10", 2026)).ReturnsAsync(momenten);
 
-        var command = new VerwerkKalenderCommand("1234AB", "10", 2026, 13, "test.ics", "company", false, "https://dav", "user", "pass");
+        _mockSync.Setup(x => x.Ondersteunt(SyncProvider.WebDav)).Returns(true);
+        var command = new VerwerkKalenderCommand("1234AB", "10", 2026, 13, "test.ics", "company", false, SyncProvider.WebDav, "https://dav", "user", "pass");
 
         // Act
         await MaakHandler().HandleAsync(command);
 
         // Assert
-        _mockSync.Verify(x => x.SynchroniseerAsync(momenten, "https://dav", "user", "pass", 13), Times.Once);
+        _mockSync.Verify(x => x.SynchroniseerAsync(momenten, It.Is<SyncConfiguratie>(c => c.Provider == SyncProvider.WebDav && c.DoelUrlOfToken == "https://dav"), 13), Times.Once);
     }
 
     [Fact]
@@ -108,6 +110,6 @@ public class VerwerkKalenderCommandHandlerTests
         await MaakHandler().HandleAsync(command);
 
         // Assert
-        _mockSync.Verify(x => x.SynchroniseerAsync(It.IsAny<IEnumerable<AfvalOphaalMoment>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()), Times.Never);
+        _mockSync.Verify(x => x.SynchroniseerAsync(It.IsAny<IEnumerable<AfvalOphaalMoment>>(), It.IsAny<SyncConfiguratie>(), It.IsAny<int>()), Times.Never);
     }
 }

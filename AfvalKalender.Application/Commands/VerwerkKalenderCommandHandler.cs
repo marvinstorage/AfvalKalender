@@ -1,5 +1,7 @@
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
+using AfvalKalender.Domain.Services;
+using AfvalKalender.Domain.ValueObjects;
 
 namespace AfvalKalender.Application.Commands;
 
@@ -9,18 +11,18 @@ public class VerwerkKalenderCommandHandler
     private readonly IAfvalApi _afvalApi;
     private readonly IAfvalRepository _afvalRepository;
     private readonly IIcsExporter _icsExporter;
-    private readonly IAfvalKalenderSynchronisator _synchronisator;
+    private readonly KalenderSynchronisatieService _synchronisatieService;
 
     public VerwerkKalenderCommandHandler(
         IAfvalApi afvalApi,
         IAfvalRepository afvalRepository,
         IIcsExporter icsExporter,
-        IAfvalKalenderSynchronisator synchronisator)
+        KalenderSynchronisatieService synchronisatieService)
     {
         _afvalApi = afvalApi;
         _afvalRepository = afvalRepository;
         _icsExporter = icsExporter;
-        _synchronisator = synchronisator;
+        _synchronisatieService = synchronisatieService;
     }
 
     public async Task<IReadOnlyList<AfvalOphaalMoment>> HandleAsync(
@@ -36,15 +38,8 @@ public class VerwerkKalenderCommandHandler
 
         await _icsExporter.ExporteerAsync(opgeslagenMomenten, command.OutputPad, command.HerinneringUur);
 
-        if (!string.IsNullOrWhiteSpace(command.WebDavUrl))
-        {
-            await _synchronisator.SynchroniseerAsync(
-                opgeslagenMomenten, 
-                command.WebDavUrl, 
-                command.WebDavGebruiker ?? string.Empty, 
-                command.WebDavWachtwoord ?? string.Empty, 
-                command.HerinneringUur);
-        }
+        var config = new SyncConfiguratie(command.SyncProvider, command.SyncDoelUrlOfToken ?? "", command.SyncGebruiker ?? "", command.SyncWachtwoord ?? "");
+        await _synchronisatieService.SynchroniseerAsync(opgeslagenMomenten, config, command.HerinneringUur);
 
         return opgeslagenMomenten.ToList().AsReadOnly();
     }

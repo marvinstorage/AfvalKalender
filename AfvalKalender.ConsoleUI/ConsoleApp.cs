@@ -1,4 +1,5 @@
 using AfvalKalender.Application.Commands;
+using AfvalKalender.Domain.ValueObjects;
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.ValueObjects;
 
@@ -82,7 +83,7 @@ public class ConsoleApp
         try
         {
             Console.WriteLine("\nBezig met ophalen en verwerken van data...");
-            var command = new VerwerkKalenderCommand(postcode, huisnummer, jaar, herinneringUur, outputBestand, geselecteerdeVerwerker.CompanyCode, false, webDavUrl, webDavGebruiker, webDavWachtwoord);
+            var command = new VerwerkKalenderCommand(postcode, huisnummer, jaar, herinneringUur, outputBestand, geselecteerdeVerwerker.CompanyCode, false, string.IsNullOrWhiteSpace(webDavUrl) ? SyncProvider.Geen : SyncProvider.WebDav, webDavUrl, webDavGebruiker, webDavWachtwoord);
             var momenten = await _handler.HandleAsync(command);
 
             string absolutePath = Path.GetFullPath(outputBestand);

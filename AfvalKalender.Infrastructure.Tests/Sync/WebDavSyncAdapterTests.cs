@@ -1,6 +1,7 @@
 using AfvalKalender.Domain.Entities;
 using AfvalKalender.Domain.Interfaces;
 using AfvalKalender.Domain.ValueObjects;
+using AfvalKalender.Domain.ValueObjects;
 using AfvalKalender.Infrastructure.Sync;
 using FluentAssertions;
 using Moq;
@@ -60,9 +61,7 @@ public class WebDavSyncAdapterTests
         // Act
         Func<Task> act = () => sut.SynchroniseerAsync(
             momenten, 
-            "https://dav.test.org/calendar.ics", 
-            "user", 
-            "pass", 
+            new SyncConfiguratie(SyncProvider.WebDav, "https://dav.test.org/calendar.ics", "user", "pass"), 
             13);
 
         // Assert
@@ -86,9 +85,7 @@ public class WebDavSyncAdapterTests
         // Act
         Func<Task> act = () => sut.SynchroniseerAsync(
             new List<AfvalOphaalMoment>(), 
-            "", 
-            "user", 
-            "pass", 
+            new SyncConfiguratie(SyncProvider.WebDav, "", "user", "pass"), 
             13);
 
         // Assert
@@ -125,9 +122,7 @@ public class WebDavSyncAdapterTests
         // Act
         Func<Task> act = () => sut.SynchroniseerAsync(
             momenten, 
-            "https://dav.test.org/calendar.ics", 
-            "wrong", 
-            "wrong", 
+            new SyncConfiguratie(SyncProvider.WebDav, "https://dav.test.org/calendar.ics", "wrong", "wrong"), 
             13);
 
         // Assert
