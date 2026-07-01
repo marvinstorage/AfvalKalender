@@ -207,13 +207,49 @@ De structuur is gebaseerd op een duidelijke domeintaal (Ubiquitous Language). Co
 -   **Reminder Trigger:** De ICS exporter gebruikt een relatieve trigger (`-PTnH`) om herinneringen in te stellen op het exacte aantal uren dat de gebruiker heeft opgegeven.
 -   **API Cache:** `CacherendeAfvalApi` slaat zowel het adres-ID als de kalenderdata op als JSON-bestanden in de map `apicache/` (of de cache-directory van het platform op mobiel). De `companyCode` maakt deel uit van de bestandsnaam zodat cache-entries per verwerker worden gescheiden. De cache is 24 uur geldig. De cache kan worden gepasseerd/geïnvalideerd door de `ForceerVernieuwen` parameter op de command/API-aanroep te gebruiken.
 
-## Minimale Afhankelijkheden
-De applicatie is ontworpen om zo min mogelijk externe libraries te gebruiken:
--   `Microsoft.EntityFrameworkCore.Sqlite`: Voor de database (GPL-compatibel).
--   `Ical.Net`: Voor het genereren van het ICS formaat (MIT - GPL compatibel).
--   `Newtonsoft.Json`: Voor API verwerking (MIT - GPL compatibel).
--   `Avalonia`: Voor de cross-platform GUI (MIT).
--   `CommunityToolkit.Mvvm`: Voor MVVM patronen in de GUI (MIT).
+## Afhankelijkheden
+
+De applicatie is opgezet met een minimale en bewuste selectie van externe libraries. Hieronder een overzicht per categorie:
+
+### Domein & Infrastructuur
+| Package | Versie | Doel | Licentie |
+|---|---|---|---|
+| `Microsoft.EntityFrameworkCore.Sqlite` | 10.0.9 | SQLite persistentie via EF Core | MIT |
+| `Ical.Net` | 5.2.2 | Genereren van ICS/iCalendar bestanden | MIT |
+| `Newtonsoft.Json` | 13.0.4 | JSON verwerking van API-responses | MIT |
+| `Microsoft.Extensions.DependencyInjection` | 10.0.9 | Dependency Injection container | MIT |
+| `Microsoft.Extensions.Http` | 8.0.1 | Typed `HttpClient` factory | MIT |
+| `Microsoft.Extensions.Logging` | 10.0.9 | Logging abstractie | MIT |
+
+### Console UI
+| Package | Versie | Doel | Licentie |
+|---|---|---|---|
+| `Spectre.Console` | 0.57.1 | Rijke terminal UI (tabellen, prompts, live display) | MIT |
+| `Microsoft.Extensions.Hosting` | 8.0.1 | Generic Host voor DI & lifecycle beheer | MIT |
+
+### Desktop UI (Avalonia)
+| Package | Versie | Doel | Licentie |
+|---|---|---|---|
+| `Avalonia` | 12.0.4 | Cross-platform GUI framework | MIT |
+| `Avalonia.Desktop` | 12.0.4 | Avalonia desktop runtime | MIT |
+| `Avalonia.Themes.Fluent` | 12.0.4 | Fluent Design thema | MIT |
+| `Avalonia.Fonts.Inter` | 12.0.4 | Inter lettertype bundel | MIT |
+| `CommunityToolkit.Mvvm` | 8.4.0 | MVVM patronen (source generators) | MIT |
+
+### Android UI (MAUI)
+| Package | Versie | Doel | Licentie |
+|---|---|---|---|
+| `Microsoft.Maui.Controls` | *(MauiVersion)* | Cross-platform MAUI framework | MIT |
+
+### Testen
+| Package | Versie | Doel | Licentie |
+|---|---|---|---|
+| `xunit` | 2.9.3 | Test framework | Apache 2.0 |
+| `Moq` | 4.20.72 | Mocking van interfaces | BSD-3 |
+| `FluentAssertions` | 8.10.0 | Leesbare assertions | Apache 2.0 |
+| `Microsoft.EntityFrameworkCore.InMemory` | 10.0.8 | In-memory EF Core voor repository-tests | MIT |
+| `Avalonia.Headless.XUnit` | 11.1.0 | Headless Avalonia voor ViewModel-tests | MIT |
+| `coverlet.collector` | 6.0.4 | Code coverage collectie | MIT |
 
 ## Licentie
 Dit project is gelicentieerd onder de **GNU General Public License v3.0 (GPL-3.0)**. Zie het [LICENSE](LICENSE) bestand voor de volledige tekst.

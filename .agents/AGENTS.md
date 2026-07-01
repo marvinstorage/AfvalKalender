@@ -1,6 +1,6 @@
 # Privacy & Security Rules
 
-- **NEVER** commit files containing real Dutch postcodes or addresses (e.g., test files, API responses, or generated ICS files with real user data like `7543CV` instead of 7543cv to a real valid dutch postcode or addresses).
+- **NEVER** commit files containing real Dutch postcodes or addresses (e.g., test files, API responses, or generated ICS files with real user data to a real valid dutch postcode or addresses).
 - **NEVER** commit `.db` SQLite databases (like `afvalkalender.db`) or API cache files (`apicache/` JSONs) to prevent exposing personal data or temporary application state. Always ensure these are ignored in `.gitignore`.
 
 # Feature Implementation Rules
