@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AfvalKalender.Domain\AfvalKalender.Domain.csproj" />
     <ProjectReference Include="..\AfvalKalender.Application\AfvalKalender.Application.csproj" />
+    <ProjectReference Include="..\AfvalKalender.ConsoleUI\AfvalKalender.ConsoleUI.csproj" />
   </ItemGroup>
 
 </Project>

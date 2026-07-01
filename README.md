@@ -27,7 +27,7 @@ De applicatie automatiseert het proces van het bijhouden van de afvalkalender. I
 -   Geen vereisten als u de **Self-contained executables** gebruikt van de [GitHub Releases](https://github.com/marvinstorage/AfvalKalender/releases) pagina.
 
 De applicatie is beschikbaar in drie varianten:
-1.  **Console UI:** Een interactieve tekst-interface.
+1.  **Console UI:** Een interactieve, rijke Terminal User Interface (TUI) gebouwd met Spectre.Console, met keuzemenu's en kleurrijke tabellen.
 2.  **Desktop GUI:** Een grafische interface (Windows & Linux).
 3.  **Android App:** Een native mobiele app (.apk).
 

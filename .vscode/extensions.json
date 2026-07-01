@@ -1,5 +1,11 @@
 {
-    "recommendations": [
-        "avaloniateam.vscode-avalonia"
-    ]
+  "recommendations": [
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "josefpihrt.roslynator",
+    "cweijan.vscode-database-client2",
+    "redhat.vscode-yaml",
+    "humao.rest-client",
+    "sonarsource.sonarlint-vscode"
+  ]
 }

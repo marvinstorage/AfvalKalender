@@ -50,12 +50,12 @@ The project follows **Hexagonal / Clean Architecture** principles, ensuring that
 - **Domain** (Core) — Contains business entities (`Adres`, `AfvalOphaalMoment`), value objects (`AfvalType`, `AfvalVerwerker`), and the **outbound port interfaces** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IAfvalKalenderSynchronisator`) and **domain services** (`KalenderSynchronisatieService`). Zero NuGet dependencies.
 - **Application** (Core) — Implements use-case orchestration. Defines the **inbound port** (`ICommandHandler<TCommand, TResult>`) and its implementation (`VerwerkKalenderCommandHandler`). Orchestrates the workflow by calling outbound ports.
 - **Infrastructure** (Driven Adapters) — Concrete implementations of the outbound ports. Includes `TwenteMilieuApi` (HTTP), `EfAfvalRepository` (SQLite/EF Core), `IcsExporter` (Ical.Net), `CacherendeAfvalApi` (24h file-based cache decorator), and `WebDavSyncAdapter`, `GoogleCalendarSyncAdapter`, and `MicrosoftGraphSyncAdapter`.
-- **Presentation** (Driving Adapters) — Entry points: `ConsoleUI` (ANSI/CLI), `DesktopUI` (Avalonia/GUI), and `AndroidUI` (MAUI). All UIs are decoupled from application logic, interacting only through the `ICommandHandler` interface.
+- **Presentation** (Driving Adapters) — Entry points: `ConsoleUI` (Spectre TUI), `DesktopUI` (Avalonia/GUI), and `AndroidUI` (MAUI). All UIs are decoupled from application logic, interacting only through the `ICommandHandler` interface.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Presentation (Driving Adapters)                            │
-│  ConsoleUI (ANSI) · DesktopUI (Avalonia) · Android (MAUI)   │
+│  ConsoleUI (Spectre TUI) · DesktopUI (Avalonia) · Android (MAUI)   │
 └───────────────┬─────────────────────────────────────────────┘
                 │ depends on (ICommandHandler)
                 ▼
