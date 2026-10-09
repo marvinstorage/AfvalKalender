@@ -1,0 +1,216 @@
+name: Release
+
+# A tag vX.Y.Z builds the Android APK (for Obtainium and sideloading) and the two Ubuntu
+# packages (console and desktop), then publishes one GitHub Release with the notes from CHANGELOG.md.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, without the leading v (a dry run uploads artifacts only, no release)'
+        required: true
+
+env:
+  VERSION: ${{ github.event.inputs.version || github.ref_name }}
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet test AfvalKalender.UnitTests/AfvalKalender.UnitTests.csproj -c Release
+      - run: dotnet test AfvalKalender.Infrastructure.Tests/AfvalKalender.Infrastructure.Tests.csproj -c Release
+      - run: dotnet test AfvalKalender.DesktopUI.Tests/AfvalKalender.DesktopUI.Tests.csproj -c Release
+
+  android:
+    name: Android APK
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Work out the version
+        id: ver
+        run: |
+          V="${VERSION#v}"
+          CORE="${V%%-*}"
+          IFS=. read -r MAJOR MINOR PATCH <<< "$CORE"
+          echo "display=$CORE" >> "$GITHUB_OUTPUT"
+          # An increasing integer: 1.2.3 becomes 10203. Android and Obtainium compare it to find updates.
+          echo "code=$((MAJOR * 10000 + MINOR * 100 + PATCH))" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install the .NET Android workload
+        run: dotnet workload install android maui-android
+
+      - name: Build signed APK
+        env:
+          ANDROID_KEY_PASS: android
+          ANDROID_STORE_PASS: android
+        run: |
+          dotnet publish AfvalKalender.AndroidUI -c Release -f net10.0-android \
+            -p:RuntimeIdentifiers="android-arm64;android-x64" \
+            -p:AndroidPackageFormat=apk \
+            -p:ApplicationDisplayVersion=${{ steps.ver.outputs.display }} \
+            -p:ApplicationVersion=${{ steps.ver.outputs.code }} \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore=$GITHUB_WORKSPACE/AfvalKalender.AndroidUI/signing/afvalkalender.keystore \
+            -p:AndroidSigningKeyAlias=afvalkalender \
+            -p:AndroidSigningKeyPass=env:ANDROID_KEY_PASS \
+            -p:AndroidSigningStorePass=env:ANDROID_STORE_PASS
+
+      - name: Collect the APK
+        run: |
+          mkdir -p dist
+          APK="$(find AfvalKalender.AndroidUI/bin -name '*-Signed.apk' | head -n 1)"
+          if [ -z "$APK" ]; then
+            echo "No signed APK found"
+            find AfvalKalender.AndroidUI/bin -name '*.apk'
+            exit 1
+          fi
+          cp "$APK" "dist/AfvalKalender-v${{ steps.ver.outputs.display }}-android.apk"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android-apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+  deb:
+    name: Ubuntu package (${{ matrix.variant }})
+    needs: tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant: [ console, desktop ]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish self-contained for linux-x64
+        run: |
+          V="${VERSION#v}"
+          case "${{ matrix.variant }}" in
+            console) PROJECT=AfvalKalender.ConsoleUI ;;
+            desktop) PROJECT=AfvalKalender.DesktopUI ;;
+          esac
+          dotnet publish "$PROJECT" -c Release -r linux-x64 --self-contained \
+            -p:Version="${V%%-*}" -o "publish/${{ matrix.variant }}"
+
+      - name: Build the .deb
+        run: |
+          V="${VERSION#v}"
+          bash scripts/build-deb.sh "${{ matrix.variant }}" "${V}" "publish/${{ matrix.variant }}" dist
+
+      - name: Smoke test the package
+        run: |
+          sudo apt-get install -y ./dist/*.deb
+          test -x "/usr/bin/afvalkalender-${{ matrix.variant }}"
+          dpkg -c dist/*.deb | head -n 20
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: deb-${{ matrix.variant }}
+          path: dist/*.deb
+          if-no-files-found: error
+
+  windows:
+    name: Windows zip (${{ matrix.variant }})
+    needs: tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant: [ console, desktop ]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish self-contained for win-x64 and zip
+        run: |
+          V="${VERSION#v}"
+          V="${V%%-*}"
+          case "${{ matrix.variant }}" in
+            console) PROJECT=AfvalKalender.ConsoleUI ;;
+            desktop) PROJECT=AfvalKalender.DesktopUI ;;
+          esac
+          dotnet publish "$PROJECT" -c Release -r win-x64 --self-contained \
+            -p:Version="$V" -o "publish/${{ matrix.variant }}"
+          mkdir -p dist
+          (cd "publish/${{ matrix.variant }}" && zip -r -q "$GITHUB_WORKSPACE/dist/AfvalKalender-${{ matrix.variant }}-v${V}-win-x64.zip" .)
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: windows-${{ matrix.variant }}
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: [ android, deb, windows ]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          awk -v h="## [$V]" 'index($0,h)==1{f=1;next} index($0,"## [")==1{f=0} f' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "No CHANGELOG section for $V; release notes will be generated from commits"
+          fi
+          {
+            echo
+            echo '### Installeren'
+            echo '**Android** (`.apk`): open het bestand op je telefoon en tik op *Installeren*. Of voeg `https://github.com/${{ github.repository }}` toe in [Obtainium](https://obtainium.imranr.dev/) om automatisch updates te krijgen. Updates installeren over de vorige versie en bewaren je gegevens.'
+            echo
+            echo '**Ubuntu/Debian** (`.deb`, amd64):'
+            echo '```bash'
+            echo "sudo apt install ./afvalkalender-console_${V}_amd64.deb   # terminal-app: afvalkalender-console"
+            echo "sudo apt install ./afvalkalender-desktop_${V}_amd64.deb   # grafische app: afvalkalender-desktop"
+            echo '```'
+            echo
+            echo '**Windows** (x64, zonder .NET installatie): pak de zip uit en start de .exe.'
+            echo "- \`AfvalKalender-console-v${V}-win-x64.zip\`: terminal-app (\`AfvalKalender.ConsoleUI.exe\`)"
+            echo "- \`AfvalKalender-desktop-v${V}-win-x64.zip\`: grafische app (\`AfvalKalender.DesktopUI.exe\`)"
+          } >> RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: "AfvalKalender ${{ github.ref_name }}"
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: true
+          files: |
+            dist/*.apk
+            dist/*.deb
+            dist/*.zip
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

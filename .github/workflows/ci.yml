@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Check developer docs
+        run: bash scripts/check-docs.sh
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build console, desktop and libraries
+        run: |
+          dotnet build AfvalKalender.ConsoleUI -c Release
+          dotnet build AfvalKalender.DesktopUI -c Release
+
+      - name: Unit tests (domain and application)
+        run: dotnet test AfvalKalender.UnitTests/AfvalKalender.UnitTests.csproj -c Release --collect:"XPlat Code Coverage" --results-directory coverage/unit
+
+      - name: Infrastructure tests
+        run: dotnet test AfvalKalender.Infrastructure.Tests/AfvalKalender.Infrastructure.Tests.csproj -c Release --collect:"XPlat Code Coverage" --results-directory coverage/infrastructure
+
+      - name: Desktop ViewModel tests
+        run: dotnet test AfvalKalender.DesktopUI.Tests/AfvalKalender.DesktopUI.Tests.csproj -c Release --collect:"XPlat Code Coverage" --results-directory coverage/desktop
+
+      - name: Code statistics and coverage summary
+        if: always()
+        continue-on-error: true
+        run: |
+          sudo apt-get install -y --no-install-recommends cloc > /dev/null
+          bash scripts/job-summary.sh
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-reports
+          path: coverage
+          if-no-files-found: ignore
+          retention-days: 14
