@@ -4,6 +4,9 @@ Alle noemenswaardige wijzigingen in AfvalKalender. Het formaat volgt [Keep a Cha
 
 ## [Unreleased]
 
+### Fixed
+- **Android-app crashte direct bij het openen (1.2.0):** de APK bevatte een Linux-build van SQLite (`libe_sqlite3.so`) die op Android niet laadt. De Linux-natives zijn nu uitgesloten van de Android-build, zodat de eigen Android-bibliotheek wordt gebruikt.
+
 ## [1.2.0] - 2026-10-09
 
 Eerste release sinds 1.1.0. Bevat ook de wijzigingen die eerder, ongetagd, onder 1.3.0 en 1.2.0 waren samengesteld.
