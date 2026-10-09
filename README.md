@@ -23,6 +23,7 @@ AfvalKalender haalt afvalophaalschema's op bij Nederlandse afvalverwerkers (via 
 - **Postcode en huisnummer:** je voert alleen je adres in. Spaties in de postcode worden in alle UI's automatisch verwijderd (`1234 AB` wordt `1234AB`).
 - **Lokale database:** ophaalmomenten staan in SQLite. Opnieuw draaien werkt alleen momenten bij waarvan de omschrijving veranderd is (`LaatstGewijzigd`).
 - **ICS export en delen:** een RFC 5545 bestand met een herinnering een instelbaar aantal uren vooraf. Op Android deel je het bestand direct met je agenda-app.
+- **Afdrukbare PDF:** in de terminal-app en de desktop-app maak je optioneel ook een A4-jaaroverzicht (12 maanden met gekleurde ophaaldagen en een legenda, in de gekozen taal) om op te hangen ([ADR-012](docs/adr/ADR-012-pdf-export-zonder-bibliotheek.md)).
 - **Taalkeuze:** de agenda-items (samenvatting en herinnering) kun je in het Nederlands of Engels exporteren; de standaard volgt je systeemtaal. Heb je het bestand eerder in een andere taal geïmporteerd, importeer het dan opnieuw: de afspraken behouden hun UID en worden bijgewerkt in plaats van gedupliceerd.
 - **Synchronisatie:** WebDAV/CalDAV (Nextcloud, Baikal, Radicale, iCloud) werkt. Google Calendar en Microsoft Graph zijn voorbereid, maar nog niet afgebouwd (zie [ADR-006](docs/adr/ADR-006-oauth2-calendar-apis.md)).
 - **API cache:** antwoorden van de API worden 24 uur bewaard om rate-limiting te voorkomen. Met `ForceerVernieuwen` sla je de cache over.
@@ -83,7 +84,7 @@ Pak `AfvalKalender-console-vX.Y.Z-win-x64.zip` (start `AfvalKalender.ConsoleUI.e
 | Console en Desktop | `LocalApplicationData/AfvalKalender/afvalkalender.db` | `LocalApplicationData/AfvalKalender/apicache/` | map waaruit je de app start (Console) of het opgegeven pad |
 | Android | `FileSystem.AppDataDirectory/afvalkalender.db` | `FileSystem.CacheDirectory/apicache` | cachemap van de app, daarna deel je het |
 
-`LocalApplicationData` is `~/.local/share` op Linux en `%LOCALAPPDATA%` op Windows. Bestandsnaam van de export: `AfvalKalender_<postcode>_<huisnummer>_<jaar>.ics`.
+`LocalApplicationData` is `~/.local/share` op Linux en `%LOCALAPPDATA%` op Windows. Bestandsnaam van de export: `AfvalKalender_<postcode>_<huisnummer>_<jaar>.ics` (en `.pdf` voor het afdrukbare overzicht).
 
 ---
 
@@ -109,9 +110,9 @@ De applicatie volgt een **hexagonale architectuur**: de kern (Domein en Applicat
 Presentatie  ->  Applicatie  ->  Domein  <-  Infrastructuur
 ```
 
-- **Domein:** entiteiten (`Adres`, `AfvalOphaalMoment`), value objects (`AfvalType`, `AfvalVerwerker`, `SyncConfiguratie`, `SyncProvider`), domein-events, de domeinservice `KalenderSynchronisatieService` en de uitgaande poorten (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IAfvalKalenderSynchronisator`). Geen NuGet-afhankelijkheden.
+- **Domein:** entiteiten (`Adres`, `AfvalOphaalMoment`), value objects (`AfvalType`, `AfvalVerwerker`, `SyncConfiguratie`, `SyncProvider`), domein-events, de domeinservice `KalenderSynchronisatieService` en de uitgaande poorten (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IPdfExporter`, `IAfvalKalenderSynchronisator`). Geen NuGet-afhankelijkheden.
 - **Applicatie:** use-case orkestratie als *light CQRS* met een zelfgemaakte `ICommandHandler`, plus een validatiedecorator (`ValidatingCommandHandlerDecorator`) die postcode, jaar, GUID en overige velden controleert.
-- **Infrastructuur:** `TwenteMilieuApi` (HTTP naar Ximmio), `CacherendeAfvalApi` (24 uur cache), `EfAfvalRepository` (SQLite en transactionele outbox), `IcsExporter` en de sync-adapters.
+- **Infrastructuur:** `TwenteMilieuApi` (HTTP naar Ximmio), `CacherendeAfvalApi` (24 uur cache), `EfAfvalRepository` (SQLite en transactionele outbox), `IcsExporter`, `PdfExporter` en de sync-adapters.
 - **Presentatie:** dunne schillen die een `VerwerkKalenderCommand` sturen.
 
 ```mermaid

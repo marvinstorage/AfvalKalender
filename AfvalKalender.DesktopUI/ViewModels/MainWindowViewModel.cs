@@ -57,6 +57,15 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _heeftResultaat = false;
 
+    [ObservableProperty]
+    private bool _maakPdf = false;
+
+    [ObservableProperty]
+    private string _pdfBestandPad = string.Empty;
+
+    [ObservableProperty]
+    private bool _heeftPdf = false;
+
     public MainWindowViewModel(
         ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOphaalMoment>> handler)
     {
@@ -92,6 +101,26 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void OpenPdf()
+    {
+        if (string.IsNullOrEmpty(PdfBestandPad)) return;
+
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = PdfBestandPad,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            StatusBericht = $"Kon bestand niet openen: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     private async Task VerwerkAsync()
     {
         if (string.IsNullOrWhiteSpace(Postcode) || string.IsNullOrWhiteSpace(Huisnummer))
@@ -102,16 +131,20 @@ public partial class MainWindowViewModel : ViewModelBase
 
         IsBezig = true;
         HeeftResultaat = false;
+        HeeftPdf = false;
         StatusBericht = "Data ophalen...";
 
         try
         {
             string postcode = Postcode.ToUpper().Replace(" ", "");
             string outputBestand = $"AfvalKalender_{postcode}_{Huisnummer}_{Jaar}.ics";
-            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, outputBestand, GeselecteerdeVerwerker.CompanyCode, false, string.IsNullOrWhiteSpace(WebDavUrl) ? SyncProvider.Geen : SyncProvider.WebDav, WebDavUrl, WebDavGebruiker, WebDavWachtwoord, GeselecteerdeTaal);
+            string? pdfBestand = MaakPdf ? $"AfvalKalender_{postcode}_{Huisnummer}_{Jaar}.pdf" : null;
+            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, outputBestand, GeselecteerdeVerwerker.CompanyCode, false, string.IsNullOrWhiteSpace(WebDavUrl) ? SyncProvider.Geen : SyncProvider.WebDav, WebDavUrl, WebDavGebruiker, WebDavWachtwoord, GeselecteerdeTaal, pdfBestand);
             var momenten = await _handler.HandleAsync(command);
 
             OutputBestandPad = System.IO.Path.GetFullPath(outputBestand);
+            PdfBestandPad = pdfBestand is null ? string.Empty : System.IO.Path.GetFullPath(pdfBestand);
+            HeeftPdf = pdfBestand is not null;
             HeeftResultaat = true;
             StatusBericht = $"Succes! {momenten.Count} ophaalmomenten geëxporteerd.";
         }

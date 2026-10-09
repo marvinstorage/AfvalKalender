@@ -11,17 +11,20 @@ public class VerwerkKalenderCommandHandler
     private readonly IAfvalApi _afvalApi;
     private readonly IAfvalRepository _afvalRepository;
     private readonly IIcsExporter _icsExporter;
+    private readonly IPdfExporter _pdfExporter;
     private readonly KalenderSynchronisatieService _synchronisatieService;
 
     public VerwerkKalenderCommandHandler(
         IAfvalApi afvalApi,
         IAfvalRepository afvalRepository,
         IIcsExporter icsExporter,
+        IPdfExporter pdfExporter,
         KalenderSynchronisatieService synchronisatieService)
     {
         _afvalApi = afvalApi;
         _afvalRepository = afvalRepository;
         _icsExporter = icsExporter;
+        _pdfExporter = pdfExporter;
         _synchronisatieService = synchronisatieService;
     }
 
@@ -37,6 +40,9 @@ public class VerwerkKalenderCommandHandler
             command.Postcode, command.Huisnummer, command.Jaar);
 
         await _icsExporter.ExporteerAsync(opgeslagenMomenten, command.OutputPad, command.HerinneringUur, command.Taal);
+
+        if (!string.IsNullOrWhiteSpace(command.PdfOutputPad))
+            await _pdfExporter.ExporteerAsync(opgeslagenMomenten, command.PdfOutputPad, command.Jaar, command.Taal);
 
         var config = new SyncConfiguratie(command.SyncProvider, command.SyncDoelUrlOfToken ?? "", command.SyncGebruiker ?? "", command.SyncWachtwoord ?? "");
         await _synchronisatieService.SynchroniseerAsync(opgeslagenMomenten, config, command.HerinneringUur, command.Taal);

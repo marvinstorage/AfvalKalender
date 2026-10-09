@@ -7,6 +7,7 @@ using AfvalKalender.Domain.Services;
 using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
+using AfvalKalender.Infrastructure.Pdf;
 using AfvalKalender.Infrastructure.Persistence;
 using AfvalKalender.Infrastructure.Sync;
 using AfvalKalender.AndroidUI.ViewModels;
@@ -48,6 +49,7 @@ public static class MauiProgram
 		
 		builder.Services.AddScoped<IAfvalRepository, EfAfvalRepository>();
 		builder.Services.AddScoped<IIcsExporter, IcsExporter>();
+		builder.Services.AddScoped<IPdfExporter, PdfExporter>();
 		builder.Services.AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {

@@ -25,7 +25,8 @@ The UI resolves `ICommandHandler<VerwerkKalenderCommand, IReadOnlyList<AfvalOpha
 3. `IAfvalRepository.SlaOpOfUpdateAsync` stores them.
 4. `IAfvalRepository.HaalOpVoorAdresEnJaarAsync` reads back the persisted moments.
 5. `IIcsExporter.ExporteerAsync` writes the `.ics` file.
-6. `KalenderSynchronisatieService.SynchroniseerAsync` syncs when a provider is set.
+6. `IPdfExporter.ExporteerAsync` writes the printable year schedule when `PdfOutputPad` is set.
+7. `KalenderSynchronisatieService.SynchroniseerAsync` syncs when a provider is set.
 
 The handler depends only on Domain ports.
 
@@ -40,6 +41,8 @@ The handler depends only on Domain ports.
 ## 6. ICS export
 
 `AfvalKalender.Infrastructure/Ics/IcsExporter.cs` builds one event per moment with Ical.Net, from 08:00 to 09:00 on the collection day. The UID is `<Type>_<yyyyMMdd>_<Postcode>`, so re-importing does not duplicate events, and a relative display alarm fires `HerinneringUur` hours before.
+
+`AfvalKalender.Infrastructure/Pdf/PdfExporter.cs` writes the optional PDF with a small hand-made PDF 1.4 writer (no library): one A4 page, a 3 x 4 grid of months, coloured collection days and a legend. Type names come from `AfvalTypeVertaling.Naam` in the chosen language ([ADR-012](../adr/ADR-012-pdf-export-zonder-bibliotheek.md)).
 
 ## 7. Optional sync
 
