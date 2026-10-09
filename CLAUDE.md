@@ -406,6 +406,7 @@ All ADRs live in [`docs/adr/`](docs/adr/).
 | [ADR-008](docs/adr/ADR-008-fixed-android-signing-key.md) | Fixed Android signing key for Obtainium updates | Accepted |
 | [ADR-009](docs/adr/ADR-009-ubuntu-deb-packaging.md) | Ubuntu .deb packaging and per-user data directory | Accepted |
 | [ADR-010](docs/adr/ADR-010-openspec-spec-driven-workflow.md) | OpenSpec spec-driven workflow | Accepted |
+| [ADR-011](docs/adr/ADR-011-meertalige-ics-uitvoer.md) | Language-selectable ICS output via Domain translation table | Accepted |
 
 ---
 
