@@ -1,0 +1,45 @@
+schema: spec-driven-with-adr
+
+context: |
+  AfvalKalender: fetches Dutch household waste-collection schedules from the Ximmio
+  API (16 providers, differentiated by CompanyCode), stores them in SQLite and
+  exports an RFC 5545 .ics file or syncs to WebDAV/CalDAV, Google Calendar and
+  Microsoft Graph. Not tied to one provider; personal use.
+  Stack: C# / .NET 10, hexagonal (Clean) architecture:
+  Presentation (ConsoleUI, DesktopUI/Avalonia, AndroidUI/MAUI) -> Application
+  (light CQRS, ICommandHandler) -> Domain <- Infrastructure (EF Core SQLite,
+  Ximmio HTTP, Ical.Net, sync adapters). Domain has zero NuGet dependencies.
+  Docs: CLAUDE.md (technical overview), docs/adr (decisions), openspec/specs (behaviour).
+  Conventions: Dutch ubiquitous language for all domain names, methods and events;
+  no EF migrations (EnsureCreated); postcodes normalised without spaces in every UI;
+  idempotent upserts; ICS UIDs are type+date+postcode; minimal third-party
+  dependencies (custom first, then BCL, then MIT/Apache); no MediatR.
+  Tests: xUnit, FluentAssertions, Moq, test names Method_Scenario_ExpectedResult in
+  Dutch; never mock domain entities; mock outbound ports.
+
+rules:
+  proposal:
+    - List every affected capability explicitly (new and modified), using the folder names under openspec/specs.
+    - State which layers are touched (Domain, Application, Infrastructure, Presentation) and whether the SQLite schema or the stored data shape changes. There are no EF migrations, so say how existing afvalkalender.db files stay usable.
+    - State whether a new NuGet package is needed and justify it against the third-party library policy in CLAUDE.md.
+    - Never include real Dutch postcodes or addresses, even as examples. Use obviously fake values.
+  specs:
+    - Use SHALL/MUST, and give every requirement at least one WHEN/THEN scenario.
+    - Describe behaviour, not code. Keep them platform-neutral unless the requirement is specific to Console, Desktop or Android.
+    - Use the Dutch domain terms (AfvalOphaalMoment, AfvalVerwerker, ForceerVernieuwen) where the domain defines them.
+    - Never put real postcodes, addresses, credentials or tokens in a spec.
+  design:
+    - Reference existing ADRs by number (ADR-001 to ADR-007). Say which layer each piece lives in and confirm the dependency flow Presentation -> Application -> Domain <- Infrastructure is not violated.
+    - New outbound capabilities define a port interface in the Domain first, then an adapter in Infrastructure.
+    - Changes to the stored data shape state how EnsureCreated handles existing databases and which alternative was considered.
+    - List rejected alternatives with a reason.
+  adr:
+    - Write to docs/adr/ADR-NNN-Title.md following the existing files (3-digit number, as in ADR-001 to ADR-007), not the 4-digit lowercase default of the schema. Reuse the format of the existing ADRs, with a Mermaid diagram when it helps.
+    - Only for long-term architectural commitments. Skip tactical fixes.
+    - Update the ADR table in CLAUDE.md.
+  tasks:
+    - Use checkbox format "- [ ] N.M", grouped by layer (Domain, Application, Infrastructure, Presentation, docs).
+    - Include unit tests per layer (UnitTests, Infrastructure.Tests, DesktopUI.Tests, AndroidUI.Tests as applicable), in Dutch with the Method_Scenario_ExpectedResult format.
+    - Include a docs-sync task covering README.md, CLAUDE.md (architecture, diagrams, tables), affected specs and the ADR.
+    - Never commit .db files, apicache/ files, or files with real postcodes or addresses.
+    - Commits carry no Claude or other AI attribution trailer.
