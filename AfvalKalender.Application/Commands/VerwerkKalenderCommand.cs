@@ -13,4 +13,5 @@ public record VerwerkKalenderCommand(
     SyncProvider SyncProvider = SyncProvider.Geen,
     string? SyncDoelUrlOfToken = null,
     string? SyncGebruiker = null,
-    string? SyncWachtwoord = null);
+    string? SyncWachtwoord = null,
+    Taal Taal = Taal.Nederlands);

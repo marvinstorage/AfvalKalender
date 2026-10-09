@@ -23,6 +23,7 @@ AfvalKalender haalt afvalophaalschema's op bij Nederlandse afvalverwerkers (via 
 - **Postcode en huisnummer:** je voert alleen je adres in. Spaties in de postcode worden in alle UI's automatisch verwijderd (`1234 AB` wordt `1234AB`).
 - **Lokale database:** ophaalmomenten staan in SQLite. Opnieuw draaien werkt alleen momenten bij waarvan de omschrijving veranderd is (`LaatstGewijzigd`).
 - **ICS export en delen:** een RFC 5545 bestand met een herinnering een instelbaar aantal uren vooraf. Op Android deel je het bestand direct met je agenda-app.
+- **Taalkeuze:** de agenda-items (samenvatting en herinnering) kun je in het Nederlands of Engels exporteren; de standaard volgt je systeemtaal. Heb je het bestand eerder in een andere taal geïmporteerd, importeer het dan opnieuw: de afspraken behouden hun UID en worden bijgewerkt in plaats van gedupliceerd.
 - **Synchronisatie:** WebDAV/CalDAV (Nextcloud, Baikal, Radicale, iCloud) werkt. Google Calendar en Microsoft Graph zijn voorbereid, maar nog niet afgebouwd (zie [ADR-006](docs/adr/ADR-006-oauth2-calendar-apis.md)).
 - **API cache:** antwoorden van de API worden 24 uur bewaard om rate-limiting te voorkomen. Met `ForceerVernieuwen` sla je de cache over.
 - **Nederlandstalig:** interface en kalenderomschrijvingen zijn Nederlands.
@@ -197,8 +198,8 @@ sequenceDiagram
     App->>DB: SlaOpOfUpdateAsync(momenten)
     Note over DB: Domein-events worden in dezelfde transactie OutboxMessages
     App->>DB: HaalOpVoorAdresEnJaarAsync(...)
-    App->>ICS: ExporteerAsync(momenten, outputPad, herinneringUur)
-    App->>Sync: SynchroniseerAsync(momenten, config, herinneringUur)
+    App->>ICS: ExporteerAsync(momenten, outputPad, herinneringUur, taal)
+    App->>Sync: SynchroniseerAsync(momenten, config, herinneringUur, taal)
     Note over Sync: Geen actie bij SyncProvider.Geen
     App-->>UI: lijst met ophaalmomenten
     UI-->>User: link naar .ics of sync-succes

@@ -19,6 +19,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private AfvalVerwerker _geselecteerdeVerwerker;
 
+    public IReadOnlyList<Taal> Talen { get; } = new[] { Taal.Nederlands, Taal.Engels };
+
+    [ObservableProperty]
+    private Taal _geselecteerdeTaal = TaalExtensies.VanSysteem();
+
     [ObservableProperty]
     private string _postcode = string.Empty;
 
@@ -103,7 +108,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             string postcode = Postcode.ToUpper().Replace(" ", "");
             string outputBestand = $"AfvalKalender_{postcode}_{Huisnummer}_{Jaar}.ics";
-            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, outputBestand, GeselecteerdeVerwerker.CompanyCode, false, string.IsNullOrWhiteSpace(WebDavUrl) ? SyncProvider.Geen : SyncProvider.WebDav, WebDavUrl, WebDavGebruiker, WebDavWachtwoord);
+            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, outputBestand, GeselecteerdeVerwerker.CompanyCode, false, string.IsNullOrWhiteSpace(WebDavUrl) ? SyncProvider.Geen : SyncProvider.WebDav, WebDavUrl, WebDavGebruiker, WebDavWachtwoord, GeselecteerdeTaal);
             var momenten = await _handler.HandleAsync(command);
 
             OutputBestandPad = System.IO.Path.GetFullPath(outputBestand);

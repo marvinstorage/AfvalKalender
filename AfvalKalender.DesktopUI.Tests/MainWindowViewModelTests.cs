@@ -71,7 +71,8 @@ public class MainWindowViewModelTests
             Postcode = "7522NG",
             Huisnummer = "45",
             Jaar = 2026,
-            HerinneringUur = 8
+            HerinneringUur = 8,
+            GeselecteerdeTaal = Taal.Engels
         };
 
         // Act
@@ -83,7 +84,8 @@ public class MainWindowViewModelTests
                 c.Postcode == "7522NG" &&
                 c.Huisnummer == "45" &&
                 c.Jaar == 2026 &&
-                c.HerinneringUur == 8),
+                c.HerinneringUur == 8 &&
+                c.Taal == Taal.Engels),
             It.IsAny<CancellationToken>()),
             Times.Once);
     }

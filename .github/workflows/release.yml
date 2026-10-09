@@ -13,7 +13,7 @@ on:
         required: true
 
 env:
-  VERSION: ${{ github.event.inputs.version || github.ref_name }}
+  RELEASE_TAG: ${{ github.event.inputs.version || github.ref_name }}
 
 jobs:
   tests:
@@ -40,7 +40,7 @@ jobs:
       - name: Work out the version
         id: ver
         run: |
-          V="${VERSION#v}"
+          V="${RELEASE_TAG#v}"
           CORE="${V%%-*}"
           IFS=. read -r MAJOR MINOR PATCH <<< "$CORE"
           echo "display=$CORE" >> "$GITHUB_OUTPUT"
@@ -108,7 +108,7 @@ jobs:
 
       - name: Publish self-contained for linux-x64
         run: |
-          V="${VERSION#v}"
+          V="${RELEASE_TAG#v}"
           case "${{ matrix.variant }}" in
             console) PROJECT=AfvalKalender.ConsoleUI ;;
             desktop) PROJECT=AfvalKalender.DesktopUI ;;
@@ -118,7 +118,7 @@ jobs:
 
       - name: Build the .deb
         run: |
-          V="${VERSION#v}"
+          V="${RELEASE_TAG#v}"
           bash scripts/build-deb.sh "${{ matrix.variant }}" "${V}" "publish/${{ matrix.variant }}" dist
 
       - name: Smoke test the package
@@ -149,7 +149,7 @@ jobs:
 
       - name: Publish self-contained for win-x64 and zip
         run: |
-          V="${VERSION#v}"
+          V="${RELEASE_TAG#v}"
           V="${V%%-*}"
           case "${{ matrix.variant }}" in
             console) PROJECT=AfvalKalender.ConsoleUI ;;

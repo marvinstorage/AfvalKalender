@@ -27,7 +27,8 @@ public class WebDavSyncAdapter : IAfvalKalenderSynchronisator
     public async Task SynchroniseerAsync(
         IEnumerable<AfvalOphaalMoment> momenten, 
         SyncConfiguratie configuratie, 
-        int herinneringUur)
+        int herinneringUur,
+        Taal taal)
     {
         if (string.IsNullOrWhiteSpace(configuratie.DoelUrlOfToken))
             throw new ArgumentException("WebDAV URL mag niet leeg zijn.", nameof(configuratie.DoelUrlOfToken));
@@ -36,7 +37,7 @@ public class WebDavSyncAdapter : IAfvalKalenderSynchronisator
         var tijdelijkBestand = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.ics");
         try
         {
-            await _icsExporter.ExporteerAsync(momenten, tijdelijkBestand, herinneringUur);
+            await _icsExporter.ExporteerAsync(momenten, tijdelijkBestand, herinneringUur, taal);
             var icsInhoud = await File.ReadAllTextAsync(tijdelijkBestand);
 
             using var request = new HttpRequestMessage(HttpMethod.Put, configuratie.DoelUrlOfToken);

@@ -36,10 +36,10 @@ public class VerwerkKalenderCommandHandler
         var opgeslagenMomenten = await _afvalRepository.HaalOpVoorAdresEnJaarAsync(
             command.Postcode, command.Huisnummer, command.Jaar);
 
-        await _icsExporter.ExporteerAsync(opgeslagenMomenten, command.OutputPad, command.HerinneringUur);
+        await _icsExporter.ExporteerAsync(opgeslagenMomenten, command.OutputPad, command.HerinneringUur, command.Taal);
 
         var config = new SyncConfiguratie(command.SyncProvider, command.SyncDoelUrlOfToken ?? "", command.SyncGebruiker ?? "", command.SyncWachtwoord ?? "");
-        await _synchronisatieService.SynchroniseerAsync(opgeslagenMomenten, config, command.HerinneringUur);
+        await _synchronisatieService.SynchroniseerAsync(opgeslagenMomenten, config, command.HerinneringUur, command.Taal);
 
         return opgeslagenMomenten.ToList().AsReadOnly();
     }

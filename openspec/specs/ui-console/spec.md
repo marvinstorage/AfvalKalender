@@ -46,3 +46,10 @@ Any exception from the handler SHALL be shown as a red message with the exceptio
 #### Scenario: Start
 - **WHEN** the program starts
 - **THEN** the database exists before the prompts appear
+
+### Requirement: Language choice
+The console UI SHALL ask for the language (Nederlands or Engels) with the system-based default preselected and put the choice in the command.
+
+#### Scenario: English chosen
+- **WHEN** the user selects Engels
+- **THEN** the command has Taal Engels
