@@ -6,7 +6,7 @@
 ## 2. Android
 
 - [x] 2.1 Add the `MauiIcon` item to `AfvalKalender.AndroidUI.csproj`
-- [ ] 2.2 Verify with the `release.yml` dry run and on the emulator (launcher icon visible, app starts)
+- [x] 2.2 Verify with the `release.yml` dry run and on the emulator (launcher icon visible, app starts)
 
 ## 3. Desktop
 
@@ -16,4 +16,4 @@
 ## 4. Docs
 
 - [x] 4.1 Show the logo in `README.md`; add a CHANGELOG entry under Unreleased
-- [ ] 4.2 `bash scripts/check-docs.sh` and `openspec validate --all --strict`; archive the change
+- [x] 4.2 `bash scripts/check-docs.sh` and `openspec validate --all --strict`; archive the change
