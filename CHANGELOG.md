@@ -4,6 +4,10 @@ Alle noemenswaardige wijzigingen in AfvalKalender. Het formaat volgt [Keep a Cha
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-09
+
+Eerste release sinds 1.1.0. Bevat ook de wijzigingen die eerder, ongetagd, onder 1.3.0 en 1.2.0 waren samengesteld.
+
 ### Added
 - **Taalkeuze voor agenda-items (issue #13):** Console, Desktop en Android laten kiezen tussen Nederlands en Engels. Samenvatting en herinnering in het `.ics` bestand en de WebDAV-sync volgen die taal; de standaard volgt de systeemtaal. De opgeslagen omschrijving en de UID blijven gelijk, dus opnieuw importeren werkt bestaande afspraken bij ([ADR-011](docs/adr/ADR-011-meertalige-ics-uitvoer.md)).
 - **Release-workflow:** een tag `vX.Y.Z` bouwt automatisch een ondertekende Android-APK, twee Ubuntu-pakketten en twee Windows-zips en publiceert een GitHub Release met de notities uit deze changelog ([Releases](docs/dev/releases.md)).
@@ -14,36 +18,10 @@ Alle noemenswaardige wijzigingen in AfvalKalender. Het formaat volgt [Keep a Cha
 - **Specificaties met OpenSpec:** het huidige gedrag is vastgelegd in `openspec/specs/` en wijzigingen lopen via `/opsx-propose`, `/opsx-apply`, `/opsx-sync` en `/opsx-archive` ([ADR-010](docs/adr/ADR-010-openspec-spec-driven-workflow.md)).
 - **Ontwikkelaarsdocs** in `docs/dev/`, `CONTRIBUTING.md`, een pull-request-template en issue-templates.
 - **Docs-check:** `scripts/check-docs.sh` controleert links en bronpaden in de documentatie.
-
-### Changed
-- **Datamap per gebruiker:** de Console- en Desktop-app bewaren `afvalkalender.db` en `apicache/` nu in `LocalApplicationData/AfvalKalender` in plaats van naast het programma. Nodig omdat het `.deb` pakket alleen-lezen in `/opt` installeert.
-- `README.md` is herschreven en alle verouderde bestandsnamen en versies zijn verwijderd.
-
-### Fixed
-- **Release-workflow:** de omgevingsvariabele `VERSION` werd door MSBuild als `$(Version)` gelezen en liet het herstellen van NuGet-pakketten mislukken; hernoemd naar `RELEASE_TAG`.
-
-### Upgrade note
-- Een bestaande `afvalkalender.db` naast het programma wordt niet meer gebruikt. De app maakt in de nieuwe map een lege database aan; de gegevens worden bij het eerstvolgende ophalen opnieuw opgebouwd.
-- Een Android-installatie van een eerdere, anders ondertekende APK moet eenmalig worden verwijderd voordat de eerste release met de vaste sleutel kan worden geïnstalleerd.
-
-## [1.3.0] - 2026-07-01
-
-Niet getagd; samengesteld uit de git-geschiedenis.
-
-### Added
 - **WebDAV/CalDAV sync** via `IAfvalKalenderSynchronisator` en `WebDavSyncAdapter`, beschikbaar in alle UI's ([ADR-002](docs/adr/ADR-002-webdav-caldav-sync.md)).
 - **Synchronisatie-architectuur** met `SyncProvider`, `SyncConfiguratie` en de domeinservice `KalenderSynchronisatieService`. Adapters voor Google Calendar en Microsoft Graph bestaan als stubs ([ADR-006](docs/adr/ADR-006-oauth2-calendar-apis.md)).
 - **Rijke terminal-interface (TUI)** met Spectre.Console: keuzelijst voor de afvalverwerker, invoervalidatie, voortgangsindicator en een tabel met de eerstvolgende ophaalmomenten ([ADR-007](docs/adr/ADR-007-Rich-TUI-Spectre-Console.md)).
 - Privacyregels voor contributors in `.agents/AGENTS.md`.
-
-### Changed
-- Gevoelige gegevens uit de repository verwijderd en de documentatie bijgewerkt.
-
-## [1.2.0] - 2026-06-14
-
-Niet getagd; samengesteld uit de git-geschiedenis.
-
-### Added
 - **Meerdere afvalverwerkers:** keuze uit 16 verwerkers via `AfvalVerwerkers.Alle` en een `CompanyCode` per aanroep.
 - **Android-app** met .NET MAUI.
 - **API cache** van 24 uur tegen rate-limiting, met `ForceerVernieuwen` om de cache te omzeilen ([ADR-005](docs/adr/ADR-005-api-cache-decorator.md)).
@@ -52,9 +30,19 @@ Niet getagd; samengesteld uit de git-geschiedenis.
 - **Domein-events en transactionele outbox** ([ADR-004](docs/adr/ADR-004-domain-events-outbox.md)).
 - Architectuurdiagrammen (Mermaid) in de README.
 
+### Changed
+- **Datamap per gebruiker:** de Console- en Desktop-app bewaren `afvalkalender.db` en `apicache/` nu in `LocalApplicationData/AfvalKalender` in plaats van naast het programma. Nodig omdat het `.deb` pakket alleen-lezen in `/opt` installeert.
+- `README.md` is herschreven en alle verouderde bestandsnamen en versies zijn verwijderd.
+- Gevoelige gegevens uit de repository verwijderd en de documentatie bijgewerkt.
+
 ### Fixed
+- **Release-workflow:** de omgevingsvariabele `VERSION` werd door MSBuild als `$(Version)` gelezen en liet het herstellen van NuGet-pakketten mislukken; hernoemd naar `RELEASE_TAG`.
 - 403-fouten opgelost door over te stappen op het eindpunt `wasteapi.ximmio.com`.
 - Android: zichtbaarheid van de app, netwerkverbindingen en toegang tot de cachemap.
+
+### Upgrade note
+- Een bestaande `afvalkalender.db` naast het programma wordt niet meer gebruikt. De app maakt in de nieuwe map een lege database aan; de gegevens worden bij het eerstvolgende ophalen opnieuw opgebouwd.
+- Een Android-installatie van een eerdere, anders ondertekende APK moet eenmalig worden verwijderd voordat de eerste release met de vaste sleutel kan worden geïnstalleerd.
 
 ## [1.1.0] - 2026-06-05
 
