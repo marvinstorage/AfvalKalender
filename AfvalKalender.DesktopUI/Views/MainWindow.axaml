@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="550"
         x:Class="AfvalKalender.DesktopUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/app-logo.ico"
         Title="AfvalKalender Exporteur"
         Width="450" Height="800"
         WindowStartupLocation="CenterScreen">

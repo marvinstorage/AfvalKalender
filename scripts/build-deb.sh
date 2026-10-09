@@ -36,14 +36,15 @@ cp -r "$publish_dir"/. "$root/opt/$package/"
 ln -s "/opt/$package/$binary" "$root/usr/bin/$package"
 
 if [ "$variant" = "desktop" ]; then
-  install -d "$root/usr/share/applications"
+  install -d "$root/usr/share/applications" "$root/usr/share/icons/hicolor/256x256/apps"
+  install -m 644 "$(dirname "$0")/../assets/logo-256.png" "$root/usr/share/icons/hicolor/256x256/apps/$package.png"
   cat > "$root/usr/share/applications/$package.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
 Name=AfvalKalender
 Comment=Afvalkalender exporteren naar je agenda
 Exec=$package
-Icon=x-office-calendar
+Icon=$package
 Terminal=false
 Categories=Utility;Office;Calendar;
 DESKTOP

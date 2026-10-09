@@ -4,7 +4,10 @@ Alle noemenswaardige wijzigingen in AfvalKalender. Het formaat volgt [Keep a Cha
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-10-09
+
 ### Added
+- **App-logo (issue #30):** AfvalKalender heeft een eigen logo (`assets/logo.png`) als Android-app-icoon, als venster- en taakbalkicoon van de desktop-app en als icoon van het Ubuntu-startmenu-item.
 - **Afdrukbare PDF (issue #10):** Console en Desktop kunnen naast het `.ics` bestand een A4-jaaroverzicht maken (12 maanden, gekleurde ophaaldagen, legenda, in de gekozen taal). De PDF wordt zonder extra bibliotheek geschreven door `PdfExporter` ([ADR-012](docs/adr/ADR-012-pdf-export-zonder-bibliotheek.md)).
 
 ## [1.2.1] - 2026-10-09

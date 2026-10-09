@@ -15,8 +15,8 @@
 
         <ApplicationId>com.companyname.afvalkalender</ApplicationId>
 
-        <ApplicationVersion>2</ApplicationVersion>
-        <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+        <ApplicationVersion>3</ApplicationVersion>
+        <ApplicationDisplayVersion>1.2.2</ApplicationDisplayVersion>
 
         <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
     </PropertyGroup>
@@ -34,6 +34,11 @@
              NuGet falls back from android-* to linux-x64 and packages a libe_sqlite3.so that cannot load
              on Android. Exclude its natives so the Android build uses its own SQLite library. -->
         <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.13" ExcludeAssets="native" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- App icon: MAUI scales the logo artwork (transparent PNG) into all launcher densities (adaptive icon). -->
+        <MauiIcon Include="..\assets\logo-foreground.png" Link="Resources\AppIcon\appicon.png" Color="#FFFFFF" ForegroundScale="0.62" />
     </ItemGroup>
 
     <ItemGroup>
