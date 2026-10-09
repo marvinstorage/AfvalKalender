@@ -57,8 +57,11 @@ public partial class App : Avalonia.Application
     private void ConfigureServices(IServiceCollection services)
     {
         // Infrastructure
+        // Data lives in the per-user application data folder, so it also works from a packaged install
+        var dataDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AfvalKalender");
+        System.IO.Directory.CreateDirectory(dataDir);
         services.AddDbContext<AfvalDbContext>(options =>
-            options.UseSqlite("Data Source=afvalkalender.db"));
+            options.UseSqlite($"Data Source={System.IO.Path.Combine(dataDir, "afvalkalender.db")}"));
         
         services.AddHttpClient<TwenteMilieuApi>()
             .ConfigurePrimaryHttpMessageHandler(() => new System.Net.Http.HttpClientHandler
@@ -66,7 +69,7 @@ public partial class App : Avalonia.Application
                 ServerCertificateCustomValidationCallback = System.Net.Http.HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             });
         services.AddScoped<IAfvalApi>(sp =>
-            new CacherendeAfvalApi(sp.GetRequiredService<TwenteMilieuApi>(), "apicache"));
+            new CacherendeAfvalApi(sp.GetRequiredService<TwenteMilieuApi>(), System.IO.Path.Combine(dataDir, "apicache")));
             
         services.AddScoped<IAfvalRepository, EfAfvalRepository>();
         services.AddScoped<IIcsExporter, IcsExporter>();

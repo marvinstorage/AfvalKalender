@@ -18,9 +18,10 @@ var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         // Infrastructure
-        // Get the absolute path to the project root
-        var projectRoot = Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName;
-        var dbPath = Path.Combine(projectRoot, "afvalkalender.db");
+        // Data lives in the per-user application data folder, so it also works from a packaged install
+        var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AfvalKalender");
+        Directory.CreateDirectory(dataDir);
+        var dbPath = Path.Combine(dataDir, "afvalkalender.db");
 
         services.AddDbContext<AfvalDbContext>(options =>
             options.UseSqlite($"Data Source={dbPath}"));
@@ -31,7 +32,7 @@ var host = Host.CreateDefaultBuilder(args)
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             });
         services.AddScoped<IAfvalApi>(sp =>
-            new CacherendeAfvalApi(sp.GetRequiredService<TwenteMilieuApi>(), "apicache"));
+            new CacherendeAfvalApi(sp.GetRequiredService<TwenteMilieuApi>(), Path.Combine(dataDir, "apicache")));
         services.AddScoped<IAfvalRepository, EfAfvalRepository>();
         services.AddScoped<IIcsExporter, IcsExporter>();
         services.AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()

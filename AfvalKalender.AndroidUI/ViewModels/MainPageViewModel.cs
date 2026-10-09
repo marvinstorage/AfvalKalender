@@ -97,7 +97,7 @@ public partial class MainPageViewModel : ObservableObject
             
             string fullPath = Path.Combine(cacheDir, fileName);
             
-            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, fullPath, GeselecteerdeVerwerker.CompanyCode, false, WebDavUrl, WebDavGebruiker, WebDavWachtwoord);
+            var command = new VerwerkKalenderCommand(postcode, Huisnummer, Jaar, HerinneringUur, fullPath, GeselecteerdeVerwerker.CompanyCode, false, string.IsNullOrWhiteSpace(WebDavUrl) ? SyncProvider.Geen : SyncProvider.WebDav, WebDavUrl,WebDavGebruiker, WebDavWachtwoord);
             var momenten = await _handler.HandleAsync(command);
 
             OutputBestandPad = fullPath;
