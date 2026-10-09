@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/logo.svg" alt="AfvalKalender logo" width="96" height="96">
+
 # AfvalKalender
 
 **Je afvalkalender in je eigen agenda: ophaaldata van 16 Nederlandse afvalverwerkers, als `.ics` bestand of via sync.**

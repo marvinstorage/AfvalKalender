@@ -37,6 +37,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- App icon: MAUI renders the shared logo into all launcher densities (adaptive icon). -->
+        <MauiIcon Include="..\assets\logo.svg" Link="Resources\AppIcon\logo.svg" Color="#2E7D32" ForegroundScale="0.65" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\AfvalKalender.Application\AfvalKalender.Application.csproj" />
         <ProjectReference Include="..\AfvalKalender.Domain\AfvalKalender.Domain.csproj" />
         <ProjectReference Include="..\AfvalKalender.Infrastructure\AfvalKalender.Infrastructure.csproj" />

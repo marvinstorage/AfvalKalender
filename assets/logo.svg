@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>AfvalKalender</title>
+  <rect width="512" height="512" rx="96" fill="#2E7D32"/>
+  <!-- kalender -->
+  <rect x="96" y="112" width="320" height="288" rx="28" fill="#FFFFFF"/>
+  <path d="M96 140a28 28 0 0 1 28-28h264a28 28 0 0 1 28 28v52H96z" fill="#1B5E20"/>
+  <rect x="160" y="80" width="28" height="56" rx="14" fill="#A5D6A7"/>
+  <rect x="324" y="80" width="28" height="56" rx="14" fill="#A5D6A7"/>
+  <!-- recycle-pijlen -->
+  <g fill="none" stroke="#2E7D32" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M256 238a54 54 0 0 1 47 27"/>
+    <path d="M311 305a54 54 0 0 1-54 31"/>
+    <path d="M222 322a54 54 0 0 1-15-60"/>
+  </g>
+  <g fill="#2E7D32">
+    <path d="M318 248l-4 28-26-10z"/>
+    <path d="M237 356l24-14-2 28z"/>
+    <path d="M196 270l24-12-6 28z"/>
+  </g>
+  <text x="256" y="176" font-family="Helvetica, Arial, sans-serif" font-size="34" font-weight="700" fill="#FFFFFF" text-anchor="middle">AFVAL</text>
+</svg>
