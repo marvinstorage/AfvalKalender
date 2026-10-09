@@ -65,7 +65,6 @@ jobs:
           ANDROID_STORE_PASS: android
         run: |
           dotnet publish AfvalKalender.AndroidUI -c Release -f net10.0-android \
-            -p:RuntimeIdentifiers="android-arm64%3Bandroid-x64" \
             -p:AndroidPackageFormat=apk \
             -p:ApplicationDisplayVersion=${{ steps.ver.outputs.display }} \
             -p:ApplicationVersion=${{ steps.ver.outputs.code }} \
