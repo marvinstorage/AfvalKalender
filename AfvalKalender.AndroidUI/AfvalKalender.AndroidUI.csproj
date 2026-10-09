@@ -38,7 +38,7 @@
 
     <ItemGroup>
         <!-- App icon: MAUI scales the logo artwork (transparent PNG) into all launcher densities (adaptive icon). -->
-        <MauiIcon Include="..\assets\logo-foreground.png" Link="Resources\AppIcon\appicon.png" Color="#FFFFFF" ForegroundScale="0.8" />
+        <MauiIcon Include="..\assets\logo-foreground.png" Link="Resources\AppIcon\appicon.png" Color="#FFFFFF" ForegroundScale="0.62" />
     </ItemGroup>
 
     <ItemGroup>

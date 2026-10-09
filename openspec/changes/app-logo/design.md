@@ -5,7 +5,7 @@ The logo is the artwork supplied by the user (`assets/logo-source.jpg`, 1024 px)
 ## Decisions
 
 - **Source `assets/logo-source.jpg`**; generated and committed: `assets/logo.png` (512 px rounded square for the README), `assets/logo-256.png` (.deb icon), `assets/logo-foreground.png` (artwork with the light background made transparent) and `AfvalKalender.DesktopUI/Assets/app-logo.ico`.
-- **Android** uses `<MauiIcon Include="..\assets\logo-foreground.png" Link="Resources\AppIcon\appicon.png" Color="#FFFFFF" ForegroundScale="0.8" />`. The white `Color` is the adaptive-icon background; MAUI generates all densities and the round icon. The manifest references `@mipmap/appicon` and `@mipmap/appicon_round`.
+- **Android** uses `<MauiIcon Include="..\assets\logo-foreground.png" Link="Resources\AppIcon\appicon.png" Color="#FFFFFF" ForegroundScale="0.62" />`. The white `Color` is the adaptive-icon background; MAUI generates all densities and the round icon. The manifest references `@mipmap/appicon` and `@mipmap/appicon_round`.
 - **Desktop uses the generated `.ico`** (16, 32, 48, 256 px, PNG entries) because Avalonia `Window.Icon` and the Windows taskbar need ICO.
 - **No new runtime library**: Pillow is only a local tool for regenerating the committed files; the build consumes the committed files.
 - **Console unchanged**: terminals have no application icon.
