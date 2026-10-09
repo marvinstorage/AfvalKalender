@@ -7,6 +7,7 @@ using AfvalKalender.Domain.Services;
 using AfvalKalender.Infrastructure.Api;
 using AfvalKalender.Infrastructure.Cache;
 using AfvalKalender.Infrastructure.Ics;
+using AfvalKalender.Infrastructure.Pdf;
 using AfvalKalender.Infrastructure.Persistence;
 using AfvalKalender.Infrastructure.Sync;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,7 @@ var host = Host.CreateDefaultBuilder(args)
             new CacherendeAfvalApi(sp.GetRequiredService<TwenteMilieuApi>(), Path.Combine(dataDir, "apicache")));
         services.AddScoped<IAfvalRepository, EfAfvalRepository>();
         services.AddScoped<IIcsExporter, IcsExporter>();
+        services.AddScoped<IPdfExporter, PdfExporter>();
         services.AddHttpClient<IAfvalKalenderSynchronisator, WebDavSyncAdapter>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {

@@ -28,6 +28,30 @@ public static class AfvalTypeVertaling
         _ => throw new ArgumentOutOfRangeException(nameof(taal), taal, null)
     };
 
+    /// <summary>Korte naam van het afvaltype, voor legenda's en overzichten.</summary>
+    public static string Naam(AfvalType type, Taal taal) => taal switch
+    {
+        Taal.Engels => type switch
+        {
+            AfvalType.GRIJS => "General waste",
+            AfvalType.GROEN => "Organic waste",
+            AfvalType.PAPIER => "Paper",
+            AfvalType.VERPAKKINGEN => "Packaging",
+            AfvalType.KERSTBOOM => "Christmas tree",
+            _ => "Unknown"
+        },
+        Taal.Nederlands => type switch
+        {
+            AfvalType.GRIJS => "Restafval",
+            AfvalType.GROEN => "GFT",
+            AfvalType.PAPIER => "Papier",
+            AfvalType.VERPAKKINGEN => "Verpakkingen",
+            AfvalType.KERSTBOOM => "Kerstboom",
+            _ => "Onbekend"
+        },
+        _ => throw new ArgumentOutOfRangeException(nameof(taal), taal, null)
+    };
+
     public static string HerinneringVoorvoegsel(Taal taal) =>
         taal == Taal.Engels ? "Reminder:" : "Herinnering:";
 }

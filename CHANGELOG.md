@@ -4,6 +4,9 @@ Alle noemenswaardige wijzigingen in AfvalKalender. Het formaat volgt [Keep a Cha
 
 ## [Unreleased]
 
+### Added
+- **Afdrukbare PDF (issue #10):** Console en Desktop kunnen naast het `.ics` bestand een A4-jaaroverzicht maken (12 maanden, gekleurde ophaaldagen, legenda, in de gekozen taal). De PDF wordt zonder extra bibliotheek geschreven door `PdfExporter` ([ADR-012](docs/adr/ADR-012-pdf-export-zonder-bibliotheek.md)).
+
 ## [1.2.0] - 2026-10-09
 
 Eerste release sinds 1.1.0. Bevat ook de wijzigingen die eerder, ongetagd, onder 1.3.0 en 1.2.0 waren samengesteld.

@@ -180,6 +180,7 @@ Both implement `IDomainEvent` which exposes `OccurredOn`.
 | `IAfvalApi` | Fetch address ID and calendar from Ximmio API. |
 | `IAfvalRepository` | Persist and query `AfvalOphaalMomenten`. |
 | `IIcsExporter` | Generate a `.ics` file from a list of moments. |
+| `IPdfExporter` | Generate a printable A4 year-schedule `.pdf` from a list of moments (ADR-012). |
 | `IAfvalKalenderSynchronisator` | Push calendar to a remote WebDAV/CalDAV server. |
 
 ---
@@ -212,6 +213,7 @@ VerwerkKalenderCommandValidator             ← validates postcode, jaar, GUID, 
 | `SyncGebruiker` | `string?` | `null` | Optional basic auth username |
 | `SyncWachtwoord` | `string?` | `null` | Optional basic auth password |
 | `Taal` | `Taal` | `Nederlands` | Language of ICS summary/alarm: `Nederlands` or `Engels` (ADR-011) |
+| `PdfOutputPad` | `string?` | `null` | Optional; when set, a printable PDF is also written there (ADR-012) |
 
 ### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
 
@@ -269,6 +271,7 @@ sequenceDiagram
 | `CacherendeAfvalApi` | `IAfvalApi` | Decorator | 24h file cache; `companyCode` in filename; injectable clock for tests. See [ADR-005](docs/adr/ADR-005-api-cache-decorator.md). |
 | `EfAfvalRepository` | `IAfvalRepository` | Repository + Outbox | Upserts entities; harvests domain events into `OutboxMessages` in same transaction. See [ADR-004](docs/adr/ADR-004-domain-events-outbox.md). |
 | `IcsExporter` | `IIcsExporter` | File writer | Writes RFC 5545 `.ics` using Ical.Net; UIDs scoped per `type+date+postcode`. |
+| `PdfExporter` | `IPdfExporter` | File writer | Dependency-free PDF 1.4 writer; one A4 page, 3 x 4 month grid, Helvetica/WinAnsi. See [ADR-012](docs/adr/ADR-012-pdf-export-zonder-bibliotheek.md). |
 | `WebDavSyncAdapter` | `IAfvalKalenderSynchronisator` | HTTP Client | Generates temp ICS, HTTP PUTs to CalDAV server with optional Basic Auth. |
 | `GoogleCalendarSyncAdapter` | `IAfvalKalenderSynchronisator` | Stub | Not implemented yet (ADR-006 is Proposed). |
 | `MicrosoftGraphSyncAdapter` | `IAfvalKalenderSynchronisator` | Stub | Not implemented yet (ADR-006 is Proposed). |
@@ -282,7 +285,7 @@ AfvalKalender/
 ├── AfvalKalender.Domain/
 │   ├── Entities/          Adres, AfvalOphaalMoment
 │   ├── Events/            IDomainEvent, AfvalOphaalMomentToegevoegd, AfvalOphaalMomentGewijzigd
-│   ├── Interfaces/        IAfvalApi, IAfvalRepository, IIcsExporter, IAfvalKalenderSynchronisator
+│   ├── Interfaces/        IAfvalApi, IAfvalRepository, IIcsExporter, IPdfExporter, IAfvalKalenderSynchronisator
 │   ├── Services/          KalenderSynchronisatieService (domain service)
 │   └── ValueObjects/      AfvalType, AfvalVerwerker (+ AfvalVerwerkers.Alle), SyncConfiguratie, SyncProvider
 │
@@ -296,6 +299,7 @@ AfvalKalender/
 │   ├── Api/               TwenteMilieuApi
 │   ├── Cache/             CacherendeAfvalApi
 │   ├── Ics/               IcsExporter
+│   ├── Pdf/               PdfExporter
 │   ├── Persistence/       AfvalDbContext, EfAfvalRepository, OutboxMessage
 │   ├── Migrations/        unused leftover (schema is created with EnsureCreated)
 │   └── Sync/              WebDavSyncAdapter, GoogleCalendarSyncAdapter (stub), MicrosoftGraphSyncAdapter (stub)
@@ -310,7 +314,7 @@ AfvalKalender/
 ├── AfvalKalender.AndroidUI.Tests/    Android ViewModel tests
 │
 ├── docs/
-│   ├── adr/               ADR-001 … ADR-010
+│   ├── adr/               ADR-001 … ADR-012
 │   └── dev/               developer documentation (architecture, conventions, testing, releases, ci, database)
 ├── openspec/              specs and changes (OpenSpec, ADR-010)
 ├── scripts/               build-deb.sh, check-docs.sh, job-summary.sh
@@ -359,7 +363,7 @@ and `FileSystem.CacheDirectory/apicache`.
 - **Test name format:** `Method_Scenario_ExpectedResult` in Dutch
   (e.g., `Constructor_MetGeldigeData_ZouAdresMoetenAanmaken`)
 - **Never mock domain entities** — instantiate them directly
-- **Mock outbound ports** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IAfvalKalenderSynchronisator`) via Moq
+- **Mock outbound ports** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IPdfExporter`, `IAfvalKalenderSynchronisator`) via Moq
 - **Repository tests** use EF Core InMemory provider
 - **ViewModel tests** use `Avalonia.Headless` with a mocked `ICommandHandler<,>`
 - **Sync adapter tests** use `Moq.Protected` to intercept `HttpMessageHandler.SendAsync`
@@ -408,6 +412,7 @@ All ADRs live in [`docs/adr/`](docs/adr/).
 | [ADR-009](docs/adr/ADR-009-ubuntu-deb-packaging.md) | Ubuntu .deb packaging and per-user data directory | Accepted |
 | [ADR-010](docs/adr/ADR-010-openspec-spec-driven-workflow.md) | OpenSpec spec-driven workflow | Accepted |
 | [ADR-011](docs/adr/ADR-011-meertalige-ics-uitvoer.md) | Language-selectable ICS output via Domain translation table | Accepted |
+| [ADR-012](docs/adr/ADR-012-pdf-export-zonder-bibliotheek.md) | Printable PDF export via a custom dependency-free writer | Accepted |
 
 ---
 

@@ -83,7 +83,10 @@ public class ConsoleApp
                     .Secret());
         }
 
+        bool maakPdf = AnsiConsole.Confirm("Wilt u ook een [green]afdrukbare PDF[/] (jaaroverzicht A4) maken?", false);
+
         string outputBestand = $"AfvalKalender_{postcode}_{huisnummer}_{jaar}.ics";
+        string? pdfBestand = maakPdf ? $"AfvalKalender_{postcode}_{huisnummer}_{jaar}.pdf" : null;
 
         try
         {
@@ -107,7 +110,8 @@ public class ConsoleApp
                         webDavUrl, 
                         webDavGebruiker, 
                         webDavWachtwoord,
-                        taal);
+                        taal,
+                        pdfBestand);
                         
                     momenten = await _handler.HandleAsync(command);
                 });
@@ -116,6 +120,12 @@ public class ConsoleApp
             AnsiConsole.MarkupLine($"\n[bold green]Succes![/] Er zijn [yellow]{momenten.Count}[/] ophaalmomenten gevonden en opgeslagen.");
             
             AnsiConsole.MarkupLine($"Het ICS bestand is aangemaakt: [link={absolutePath}]{absolutePath}[/]");
+
+            if (pdfBestand is not null)
+            {
+                string pdfPad = Path.GetFullPath(pdfBestand);
+                AnsiConsole.MarkupLine($"Het PDF bestand is aangemaakt: [link={pdfPad}]{pdfPad}[/]");
+            }
 
             // Toon een tabel met de eerstvolgende ophaalmomenten
             if (momenten.Any())

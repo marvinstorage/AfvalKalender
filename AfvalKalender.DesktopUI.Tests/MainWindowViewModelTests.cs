@@ -91,6 +91,48 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task VerwerkCommand_MetPdfOptieAan_ZouPdfPadInCommandMoetenZetten()
+    {
+        var mock = MaakMockHandler();
+        var viewModel = new MainWindowViewModel(mock.Object)
+        {
+            Postcode = "7522NG",
+            Huisnummer = "45",
+            Jaar = 2026,
+            MaakPdf = true
+        };
+
+        await viewModel.VerwerkCommand.ExecuteAsync(null);
+
+        mock.Verify(x => x.HandleAsync(
+            It.Is<VerwerkKalenderCommand>(c => c.PdfOutputPad == "AfvalKalender_7522NG_45_2026.pdf"),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+        viewModel.HeeftPdf.Should().BeTrue();
+        viewModel.PdfBestandPad.Should().EndWith("AfvalKalender_7522NG_45_2026.pdf");
+    }
+
+    [Fact]
+    public async Task VerwerkCommand_MetPdfOptieUit_ZouGeenPdfPadMoetenZetten()
+    {
+        var mock = MaakMockHandler();
+        var viewModel = new MainWindowViewModel(mock.Object)
+        {
+            Postcode = "7522NG",
+            Huisnummer = "45",
+            Jaar = 2026
+        };
+
+        await viewModel.VerwerkCommand.ExecuteAsync(null);
+
+        mock.Verify(x => x.HandleAsync(
+            It.Is<VerwerkKalenderCommand>(c => c.PdfOutputPad == null),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+        viewModel.HeeftPdf.Should().BeFalse();
+    }
+
+    [Fact]
     public void OpenBestandCommand_ZouMoetenBestaan()
     {
         var viewModel = new MainWindowViewModel(MaakMockHandler().Object);

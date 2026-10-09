@@ -14,10 +14,11 @@ public class VerwerkKalenderCommandHandlerTests
     private readonly Mock<IAfvalApi> _mockApi = new();
     private readonly Mock<IAfvalRepository> _mockRepo = new();
     private readonly Mock<IIcsExporter> _mockIcs = new();
+    private readonly Mock<IPdfExporter> _mockPdf = new();
     private readonly Mock<IAfvalKalenderSynchronisator> _mockSync = new();
 
     private VerwerkKalenderCommandHandler MaakHandler() =>
-        new(_mockApi.Object, _mockRepo.Object, _mockIcs.Object, new KalenderSynchronisatieService(new[] { _mockSync.Object }));
+        new(_mockApi.Object, _mockRepo.Object, _mockIcs.Object, _mockPdf.Object, new KalenderSynchronisatieService(new[] { _mockSync.Object }));
 
     [Fact]
     public async Task HandleAsync_ZouJuisteVolgordeMoetenAanhouden()
@@ -136,5 +137,34 @@ public class VerwerkKalenderCommandHandlerTests
         _mockIcs.Verify(x => x.ExporteerAsync(momenten, "out.ics", 13, Taal.Engels), Times.Once);
         _mockSync.Verify(x => x.SynchroniseerAsync(momenten, It.IsAny<SyncConfiguratie>(), 13, Taal.Engels), Times.Once);
         momenten[0].Omschrijving.Should().Be("Restafval wordt opgehaald");
+    }
+
+    [Fact]
+    public async Task HandleAsync_MetPdfPad_ZouPdfMoetenExporteren()
+    {
+        var momenten = new List<AfvalOphaalMoment> { new(AfvalType.GRIJS, new DateTime(2026, 3, 4), "Restafval wordt opgehaald", "1234AB", "10") };
+        _mockApi.Setup(x => x.HaalUniekAdresIdOpAsync("1234AB", "10")).ReturnsAsync("uniek-123");
+        _mockApi.Setup(x => x.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026)).ReturnsAsync(momenten);
+        _mockRepo.Setup(x => x.HaalOpVoorAdresEnJaarAsync("1234AB", "10", 2026)).ReturnsAsync(momenten);
+
+        var command = new VerwerkKalenderCommand("1234AB", "10", 2026, 13, "out.ics", Taal: Taal.Engels, PdfOutputPad: "out.pdf");
+
+        await MaakHandler().HandleAsync(command);
+
+        _mockPdf.Verify(x => x.ExporteerAsync(momenten, "out.pdf", 2026, Taal.Engels), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ZonderPdfPad_ZouPdfNietMoetenExporteren()
+    {
+        var momenten = new List<AfvalOphaalMoment> { new(AfvalType.GRIJS, new DateTime(2026, 3, 4), "Restafval wordt opgehaald", "1234AB", "10") };
+        _mockApi.Setup(x => x.HaalUniekAdresIdOpAsync("1234AB", "10")).ReturnsAsync("uniek-123");
+        _mockApi.Setup(x => x.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026)).ReturnsAsync(momenten);
+        _mockRepo.Setup(x => x.HaalOpVoorAdresEnJaarAsync("1234AB", "10", 2026)).ReturnsAsync(momenten);
+
+        await MaakHandler().HandleAsync(new VerwerkKalenderCommand("1234AB", "10", 2026, 13, "out.ics"));
+
+        _mockPdf.Verify(x => x.ExporteerAsync(It.IsAny<IEnumerable<AfvalOphaalMoment>>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<Taal>()), Times.Never);
+        _mockIcs.Verify(x => x.ExporteerAsync(momenten, "out.ics", 13, Taal.Nederlands), Times.Once);
     }
 }

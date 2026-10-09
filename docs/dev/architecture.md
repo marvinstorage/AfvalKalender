@@ -32,6 +32,7 @@ graph TD
 | `IAfvalApi` | `AfvalKalender.Domain/Interfaces/IAfvalApi.cs` | `AfvalKalender.Infrastructure/Api/TwenteMilieuApi.cs`, wrapped by `AfvalKalender.Infrastructure/Cache/CacherendeAfvalApi.cs` |
 | `IAfvalRepository` | `AfvalKalender.Domain/Interfaces/IAfvalRepository.cs` | `AfvalKalender.Infrastructure/Persistence/EfAfvalRepository.cs` |
 | `IIcsExporter` | `AfvalKalender.Domain/Interfaces/IIcsExporter.cs` | `AfvalKalender.Infrastructure/Ics/IcsExporter.cs` |
+| `IPdfExporter` | `AfvalKalender.Domain/Interfaces/IPdfExporter.cs` | `AfvalKalender.Infrastructure/Pdf/PdfExporter.cs` |
 | `IAfvalKalenderSynchronisator` | `AfvalKalender.Domain/Interfaces/IAfvalKalenderSynchronisator.cs` | `AfvalKalender.Infrastructure/Sync/WebDavSyncAdapter.cs`; `AfvalKalender.Infrastructure/Sync/GoogleCalendarSyncAdapter.cs` and `AfvalKalender.Infrastructure/Sync/MicrosoftGraphSyncAdapter.cs` are stubs |
 
 The class name `TwenteMilieuApi` is historical: it talks to the shared Ximmio API for all 16 providers, selected by `CompanyCode`.

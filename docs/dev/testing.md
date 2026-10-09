@@ -29,7 +29,7 @@ dotnet test AfvalKalender.UnitTests --filter "FullyQualifiedName~AdresTests.Cons
 - Test names are `Method_Scenario_ExpectedResult` in Dutch, for example `Constructor_MetGeldigeData_ZouAdresMoetenAanmaken`.
 - Arrange, Act and Assert comments separate the three parts.
 - **Never mock domain entities**; create them directly.
-- **Mock outbound ports** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IAfvalKalenderSynchronisator`) with Moq.
+- **Mock outbound ports** (`IAfvalApi`, `IAfvalRepository`, `IIcsExporter`, `IPdfExporter`, `IAfvalKalenderSynchronisator`) with Moq.
 - Repository tests use the EF Core InMemory provider.
 - View model tests use Avalonia.Headless with a mocked `ICommandHandler<,>`.
 - Sync adapter tests intercept `HttpMessageHandler.SendAsync` with `Moq.Protected`.

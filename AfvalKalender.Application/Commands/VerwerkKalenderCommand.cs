@@ -14,4 +14,5 @@ public record VerwerkKalenderCommand(
     string? SyncDoelUrlOfToken = null,
     string? SyncGebruiker = null,
     string? SyncWachtwoord = null,
-    Taal Taal = Taal.Nederlands);
+    Taal Taal = Taal.Nederlands,
+    string? PdfOutputPad = null);

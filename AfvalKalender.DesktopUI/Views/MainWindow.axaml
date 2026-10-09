@@ -77,6 +77,8 @@
                       HorizontalAlignment="Stretch"/>
         </StackPanel>
 
+        <CheckBox IsChecked="{Binding MaakPdf}" Content="Ook afdrukbare PDF maken (jaaroverzicht A4)"/>
+
         <Separator Height="2" Margin="0,5"/>
         <TextBlock Text="WebDAV / CalDAV Sync (Optioneel)" FontWeight="Bold" />
 
@@ -124,8 +126,19 @@
                 HorizontalAlignment="Center"
                 Classes="link"
                 Margin="0,5,0,0">
-            <TextBlock Text="Open ICS bestand" 
-                       TextDecorations="Underline" 
+            <TextBlock Text="Open ICS bestand"
+                       TextDecorations="Underline"
+                       Foreground="Blue"
+                       Cursor="Hand"/>
+        </Button>
+
+        <Button Command="{Binding OpenPdfCommand}"
+                IsVisible="{Binding HeeftPdf}"
+                HorizontalAlignment="Center"
+                Classes="link"
+                Margin="0,5,0,0">
+            <TextBlock Text="Open PDF bestand"
+                       TextDecorations="Underline"
                        Foreground="Blue"
                        Cursor="Hand"/>
         </Button>
