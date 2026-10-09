@@ -33,14 +33,22 @@ dotnet publish -c Release -r linux-x64 --self-contained
 dotnet build-server shutdown && dotnet publish AfvalKalender.AndroidUI \
   -c Release \
   -f net10.0-android \
-  -p:RuntimeIdentifier=android-arm64 \
+  -p:RuntimeIdentifiers="android-arm64;android-x64" \
   -p:AndroidPackageFormat=apk \
-  -p:AndroidKeyStore=false \
   -p:SkipUsingBuiltInWorkloads=true \
   -p:NoWarn=NU1605 \
   -p:AndroidSdkDirectory=$HOME/.android/sks \
   -p:JavaSdkDirectory=/usr/lib/jvm/java-21-openjdk-amd64
+# Signing uses the committed key in AfvalKalender.AndroidUI/signing/ (ADR-008).
+# Releases build one universal APK (arm64 + x86_64): see docs/dev/releases.md.
+
+# Checks (also run in CI)
+bash scripts/check-docs.sh                          # docs links and source paths
+npx --no-install openspec validate --all --strict   # specs, when openspec/ changed
 ```
+
+Developer documentation lives in [`docs/dev/`](docs/dev/README.md); contribution rules in
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 > **Note:** `dotnet test` at solution level fails for Android projects due to the
 > missing SDK in CI. Run each test project individually as shown above.
@@ -153,7 +161,7 @@ matching the language of the problem domain and the team.
 
 | Value Object | Dutch name | Description |
 |---|---|---|
-| `AfvalType` | Afval Type | Enum: `GRIJS`, `GROEN`, `PAPIER`, `GFT`, `GLAS`, `TEXTIEL`, `ONBEKEND`. |
+| `AfvalType` | Afval Type | Enum: `GRIJS`, `GROEN`, `PAPIER`, `VERPAKKINGEN`, `KERSTBOOM`, `ONBEKEND`. |
 | `AfvalVerwerker` | Afval Verwerker | Immutable `record(Id, Naam, CompanyCode)`. `AfvalVerwerkers.Alle` lists all 16 supported providers. |
 
 ### Domain Events
@@ -199,9 +207,10 @@ VerwerkKalenderCommandValidator             ← validates postcode, jaar, GUID, 
 | `OutputPad` | `string` | — | Required (non-whitespace) |
 | `CompanyCode` | `string` | Twente Milieu GUID | Must be a parseable `Guid` |
 | `ForceerVernieuwen` | `bool` | `false` | Bypass 24-hour API cache |
-| `WebDavUrl` | `string?` | `null` | Optional WebDAV destination |
-| `WebDavGebruiker` | `string?` | `null` | Optional WebDAV basic auth username |
-| `WebDavWachtwoord`| `string?` | `null` | Optional WebDAV basic auth password |
+| `SyncProvider` | `SyncProvider` | `Geen` | `Geen`, `WebDav`, `GoogleCalendar` or `MicrosoftGraph` |
+| `SyncDoelUrlOfToken` | `string?` | `null` | WebDAV URL (or token for the cloud providers) |
+| `SyncGebruiker` | `string?` | `null` | Optional basic auth username |
+| `SyncWachtwoord` | `string?` | `null` | Optional basic auth password |
 
 ### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
 
@@ -260,8 +269,8 @@ sequenceDiagram
 | `EfAfvalRepository` | `IAfvalRepository` | Repository + Outbox | Upserts entities; harvests domain events into `OutboxMessages` in same transaction. See [ADR-004](docs/adr/ADR-004-domain-events-outbox.md). |
 | `IcsExporter` | `IIcsExporter` | File writer | Writes RFC 5545 `.ics` using Ical.Net; UIDs scoped per `type+date+postcode`. |
 | `WebDavSyncAdapter` | `IAfvalKalenderSynchronisator` | HTTP Client | Generates temp ICS, HTTP PUTs to CalDAV server with optional Basic Auth. |
-| `GoogleCalendarSyncAdapter` | `IAfvalKalenderSynchronisator` | HTTP Client | Syncs to Google Calendar via OAuth2 APIs. |
-| `MicrosoftGraphSyncAdapter` | `IAfvalKalenderSynchronisator` | HTTP Client | Syncs to MS Graph via OAuth2 APIs. |
+| `GoogleCalendarSyncAdapter` | `IAfvalKalenderSynchronisator` | Stub | Not implemented yet (ADR-006 is Proposed). |
+| `MicrosoftGraphSyncAdapter` | `IAfvalKalenderSynchronisator` | Stub | Not implemented yet (ADR-006 is Proposed). |
 
 ---
 
@@ -273,7 +282,8 @@ AfvalKalender/
 │   ├── Entities/          Adres, AfvalOphaalMoment
 │   ├── Events/            IDomainEvent, AfvalOphaalMomentToegevoegd, AfvalOphaalMomentGewijzigd
 │   ├── Interfaces/        IAfvalApi, IAfvalRepository, IIcsExporter, IAfvalKalenderSynchronisator
-│   └── ValueObjects/      AfvalType, AfvalVerwerker (+ AfvalVerwerkers.Alle)
+│   ├── Services/          KalenderSynchronisatieService (domain service)
+│   └── ValueObjects/      AfvalType, AfvalVerwerker (+ AfvalVerwerkers.Alle), SyncConfiguratie, SyncProvider
 │
 ├── AfvalKalender.Application/
 │   ├── Commands/          ICommandHandler, ICommandValidator, ValidatingCommandHandlerDecorator,
@@ -286,9 +296,10 @@ AfvalKalender/
 │   ├── Cache/             CacherendeAfvalApi
 │   ├── Ics/               IcsExporter
 │   ├── Persistence/       AfvalDbContext, EfAfvalRepository, OutboxMessage
-│   └── Sync/              WebDavSyncAdapter
+│   ├── Migrations/        unused leftover (schema is created with EnsureCreated)
+│   └── Sync/              WebDavSyncAdapter, GoogleCalendarSyncAdapter (stub), MicrosoftGraphSyncAdapter (stub)
 │
-├── AfvalKalender.ConsoleUI/          ANSI/CLI driving adapter
+├── AfvalKalender.ConsoleUI/          Spectre.Console TUI driving adapter
 ├── AfvalKalender.DesktopUI/          Avalonia MVVM driving adapter
 ├── AfvalKalender.AndroidUI/          .NET MAUI driving adapter (Android 16)
 │
@@ -297,14 +308,18 @@ AfvalKalender/
 ├── AfvalKalender.DesktopUI.Tests/    Avalonia headless ViewModel tests
 ├── AfvalKalender.AndroidUI.Tests/    Android ViewModel tests
 │
-└── docs/
-    └── adr/
-        ├── ADR-001-light-cqrs-icommandhandler.md
-        ├── ADR-002-webdav-caldav-sync.md
-        ├── ADR-003-command-validation-decorator.md
-        ├── ADR-004-domain-events-outbox.md
-        └── ADR-005-api-cache-decorator.md
+├── docs/
+│   ├── adr/               ADR-001 … ADR-010
+│   └── dev/               developer documentation (architecture, conventions, testing, releases, ci, database)
+├── openspec/              specs and changes (OpenSpec, ADR-010)
+├── scripts/               build-deb.sh, check-docs.sh, job-summary.sh
+├── .github/               workflows (ci, release, codeql, specs), dependabot, PR and issue templates
+└── .agents/               AGENTS.md, skills and /opsx-* workflows
 ```
+
+Runtime data: Console and Desktop keep `afvalkalender.db` and `apicache/` in
+`LocalApplicationData/AfvalKalender/` (per user); Android uses `FileSystem.AppDataDirectory`
+and `FileSystem.CacheDirectory/apicache`.
 
 ---
 
@@ -387,6 +402,10 @@ All ADRs live in [`docs/adr/`](docs/adr/).
 | [ADR-004](docs/adr/ADR-004-domain-events-outbox.md) | Domain Events and Transactional Outbox Pattern | Accepted |
 | [ADR-005](docs/adr/ADR-005-api-cache-decorator.md) | 24-Hour File-Based API Cache with ForceerVernieuwen Bypass | Accepted |
 | [ADR-006](docs/adr/ADR-006-oauth2-calendar-apis.md) | OAuth2 Synchronization via Native Cloud APIs (Google & Microsoft) | Proposed |
+| [ADR-007](docs/adr/ADR-007-Rich-TUI-Spectre-Console.md) | Rich Terminal User Interface via Spectre.Console | Accepted |
+| [ADR-008](docs/adr/ADR-008-fixed-android-signing-key.md) | Fixed Android signing key for Obtainium updates | Accepted |
+| [ADR-009](docs/adr/ADR-009-ubuntu-deb-packaging.md) | Ubuntu .deb packaging and per-user data directory | Accepted |
+| [ADR-010](docs/adr/ADR-010-openspec-spec-driven-workflow.md) | OpenSpec spec-driven workflow | Accepted |
 
 ---
 
