@@ -90,18 +90,8 @@ public class TwenteMilieuApi : IAfvalApi
         return momenten;
     }
 
-    private string MapOmschrijving(AfvalType type)
-    {
-        return type switch
-        {
-            AfvalType.GRIJS => "Restafval wordt opgehaald",
-            AfvalType.GROEN => "GFT afval wordt opgehaald",
-            AfvalType.PAPIER => "Oud papier wordt opgehaald",
-            AfvalType.VERPAKKINGEN => "Plastic en drinkpakken worden opgehaald",
-            AfvalType.KERSTBOOM => "Kerstboom wordt opgehaald",
-            _ => "Afval wordt opgehaald"
-        };
-    }
+    private string MapOmschrijving(AfvalType type) =>
+        AfvalTypeVertaling.Omschrijving(type, Taal.Nederlands);
 
     private AfvalType MapAfvalType(string type)
     {

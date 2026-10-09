@@ -70,6 +70,13 @@
             <NumericUpDown Value="{Binding HerinneringUur}" Minimum="0" Maximum="48"/>
         </StackPanel>
 
+        <StackPanel Spacing="5">
+            <TextBlock Text="Taal agenda-items / Calendar language"/>
+            <ComboBox ItemsSource="{Binding Talen}"
+                      SelectedItem="{Binding GeselecteerdeTaal}"
+                      HorizontalAlignment="Stretch"/>
+        </StackPanel>
+
         <Separator Height="2" Margin="0,5"/>
         <TextBlock Text="WebDAV / CalDAV Sync (Optioneel)" FontWeight="Bold" />
 

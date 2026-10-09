@@ -58,6 +58,16 @@ public class ConsoleApp
                 .DefaultValue(13)
                 .ValidationErrorMessage("[red]Voer een geldig getal in.[/]"));
 
+        // Spectre selecteert de eerste keuze, dus de systeemtaal staat bovenaan.
+        var talen = TaalExtensies.VanSysteem() == Taal.Engels
+            ? new[] { Taal.Engels, Taal.Nederlands }
+            : new[] { Taal.Nederlands, Taal.Engels };
+        var taalPrompt = new SelectionPrompt<Taal>()
+            .Title("In welke [green]taal[/] moeten de agenda-items zijn?")
+            .AddChoices(talen)
+            .UseConverter(t => t == Taal.Engels ? "English" : "Nederlands");
+        var taal = AnsiConsole.Prompt(taalPrompt);
+
         // WebDAV Sync
         bool gebruikWebDav = AnsiConsole.Confirm("Wilt u [green]WebDAV / CalDAV synchronisatie[/] configureren?", false);
         string webDavUrl = "";
@@ -96,7 +106,8 @@ public class ConsoleApp
                         gebruikWebDav ? SyncProvider.WebDav : SyncProvider.Geen, 
                         webDavUrl, 
                         webDavGebruiker, 
-                        webDavWachtwoord);
+                        webDavWachtwoord,
+                        taal);
                         
                     momenten = await _handler.HandleAsync(command);
                 });

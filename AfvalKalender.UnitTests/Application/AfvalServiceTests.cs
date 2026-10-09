@@ -40,7 +40,7 @@ public class VerwerkKalenderCommandHandlerTests
         _mockApi.Verify(x => x.HaalUniekAdresIdOpAsync("1234AB", "10"), Times.Once);
         _mockApi.Verify(x => x.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026), Times.Once);
         _mockRepo.Verify(x => x.SlaOpOfUpdateAsync(momenten), Times.Once);
-        _mockIcs.Verify(x => x.ExporteerAsync(momenten, "test.ics", 13), Times.Once);
+        _mockIcs.Verify(x => x.ExporteerAsync(momenten, "test.ics", 13, Taal.Nederlands), Times.Once);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class VerwerkKalenderCommandHandlerTests
 
         // Assert — all command values are forwarded correctly
         _mockApi.Verify(x => x.HaalKalenderOpAsync("xyz", "9999ZZ", "99", 2027), Times.Once);
-        _mockIcs.Verify(x => x.ExporteerAsync(momenten, "output.ics", 8), Times.Once);
+        _mockIcs.Verify(x => x.ExporteerAsync(momenten, "output.ics", 8, Taal.Nederlands), Times.Once);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class VerwerkKalenderCommandHandlerTests
         await MaakHandler().HandleAsync(command);
 
         // Assert
-        _mockSync.Verify(x => x.SynchroniseerAsync(momenten, It.Is<SyncConfiguratie>(c => c.Provider == SyncProvider.WebDav && c.DoelUrlOfToken == "https://dav"), 13), Times.Once);
+        _mockSync.Verify(x => x.SynchroniseerAsync(momenten, It.Is<SyncConfiguratie>(c => c.Provider == SyncProvider.WebDav && c.DoelUrlOfToken == "https://dav"), 13, Taal.Nederlands), Times.Once);
     }
 
     [Fact]
@@ -110,6 +110,31 @@ public class VerwerkKalenderCommandHandlerTests
         await MaakHandler().HandleAsync(command);
 
         // Assert
-        _mockSync.Verify(x => x.SynchroniseerAsync(It.IsAny<IEnumerable<AfvalOphaalMoment>>(), It.IsAny<SyncConfiguratie>(), It.IsAny<int>()), Times.Never);
+        _mockSync.Verify(x => x.SynchroniseerAsync(It.IsAny<IEnumerable<AfvalOphaalMoment>>(), It.IsAny<SyncConfiguratie>(), It.IsAny<int>(), It.IsAny<Taal>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MetEngelseTaal_ZouTaalDoorgevenAanExporterEnSynchronisatie()
+    {
+        // Arrange
+        var momenten = new List<AfvalOphaalMoment>
+        {
+            new(AfvalType.GRIJS, DateTime.Now, "Restafval wordt opgehaald", "1234AB", "10")
+        };
+        _mockApi.Setup(x => x.HaalUniekAdresIdOpAsync("1234AB", "10")).ReturnsAsync("uniek-123");
+        _mockApi.Setup(x => x.HaalKalenderOpAsync("uniek-123", "1234AB", "10", 2026)).ReturnsAsync(momenten);
+        _mockRepo.Setup(x => x.HaalOpVoorAdresEnJaarAsync("1234AB", "10", 2026)).ReturnsAsync(momenten);
+        _mockSync.Setup(x => x.Ondersteunt(SyncProvider.WebDav)).Returns(true);
+
+        var command = new VerwerkKalenderCommand("1234AB", "10", 2026, 13, "out.ics",
+            SyncProvider: SyncProvider.WebDav, SyncDoelUrlOfToken: "https://dav", Taal: Taal.Engels);
+
+        // Act
+        await MaakHandler().HandleAsync(command);
+
+        // Assert
+        _mockIcs.Verify(x => x.ExporteerAsync(momenten, "out.ics", 13, Taal.Engels), Times.Once);
+        _mockSync.Verify(x => x.SynchroniseerAsync(momenten, It.IsAny<SyncConfiguratie>(), 13, Taal.Engels), Times.Once);
+        momenten[0].Omschrijving.Should().Be("Restafval wordt opgehaald");
     }
 }

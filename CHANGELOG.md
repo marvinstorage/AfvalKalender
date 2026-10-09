@@ -5,6 +5,7 @@ Alle noemenswaardige wijzigingen in AfvalKalender. Het formaat volgt [Keep a Cha
 ## [Unreleased]
 
 ### Added
+- **Taalkeuze voor agenda-items (issue #13):** Console, Desktop en Android laten kiezen tussen Nederlands en Engels. Samenvatting en herinnering in het `.ics` bestand en de WebDAV-sync volgen die taal; de standaard volgt de systeemtaal. De opgeslagen omschrijving en de UID blijven gelijk, dus opnieuw importeren werkt bestaande afspraken bij ([ADR-011](docs/adr/ADR-011-meertalige-ics-uitvoer.md)).
 - **Release-workflow:** een tag `vX.Y.Z` bouwt automatisch een ondertekende Android-APK, twee Ubuntu-pakketten en twee Windows-zips en publiceert een GitHub Release met de notities uit deze changelog ([Releases](docs/dev/releases.md)).
 - **Android-APK voor Obtainium:** `AfvalKalender-vX.Y.Z-android.apk` is steeds met dezelfde vaste sleutel ondertekend, zodat updates over de vorige versie installeren. Voeg de repository-URL toe in Obtainium voor automatische updates ([ADR-008](docs/adr/ADR-008-fixed-android-signing-key.md)).
 - **Ubuntu-pakketten:** `afvalkalender-console_X.Y.Z_amd64.deb` (commando `afvalkalender-console`) en `afvalkalender-desktop_X.Y.Z_amd64.deb` (commando `afvalkalender-desktop` met startmenu-item), self-contained in `/opt` ([ADR-009](docs/adr/ADR-009-ubuntu-deb-packaging.md)).
@@ -17,6 +18,9 @@ Alle noemenswaardige wijzigingen in AfvalKalender. Het formaat volgt [Keep a Cha
 ### Changed
 - **Datamap per gebruiker:** de Console- en Desktop-app bewaren `afvalkalender.db` en `apicache/` nu in `LocalApplicationData/AfvalKalender` in plaats van naast het programma. Nodig omdat het `.deb` pakket alleen-lezen in `/opt` installeert.
 - `README.md` is herschreven en alle verouderde bestandsnamen en versies zijn verwijderd.
+
+### Fixed
+- **Release-workflow:** de omgevingsvariabele `VERSION` werd door MSBuild als `$(Version)` gelezen en liet het herstellen van NuGet-pakketten mislukken; hernoemd naar `RELEASE_TAG`.
 
 ### Upgrade note
 - Een bestaande `afvalkalender.db` naast het programma wordt niet meer gebruikt. De app maakt in de nieuwe map een lege database aan; de gegevens worden bij het eerstvolgende ophalen opnieuw opgebouwd.

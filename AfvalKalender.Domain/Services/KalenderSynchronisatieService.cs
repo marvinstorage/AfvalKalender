@@ -16,7 +16,7 @@ public class KalenderSynchronisatieService
         _synchronisatoren = synchronisatoren;
     }
 
-    public async Task SynchroniseerAsync(IEnumerable<AfvalOphaalMoment> momenten, SyncConfiguratie configuratie, int herinneringUur)
+    public async Task SynchroniseerAsync(IEnumerable<AfvalOphaalMoment> momenten, SyncConfiguratie configuratie, int herinneringUur, Taal taal)
     {
         if (configuratie.Provider == SyncProvider.Geen)
         {
@@ -29,6 +29,6 @@ public class KalenderSynchronisatieService
             throw new System.NotSupportedException($"Geen synchronisator gevonden voor provider {configuratie.Provider}.");
         }
 
-        await synchronisator.SynchroniseerAsync(momenten, configuratie, herinneringUur);
+        await synchronisator.SynchroniseerAsync(momenten, configuratie, herinneringUur, taal);
     }
 }

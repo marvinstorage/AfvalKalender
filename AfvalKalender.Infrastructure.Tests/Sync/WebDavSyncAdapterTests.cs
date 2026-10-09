@@ -31,8 +31,8 @@ public class WebDavSyncAdapterTests
             new(AfvalType.GRIJS, DateTime.Today, "Test", "1234AB", "10")
         };
 
-        _mockIcsExporter.Setup(x => x.ExporteerAsync(momenten, It.IsAny<string>(), 13))
-            .Callback<IEnumerable<AfvalOphaalMoment>, string, int>((m, path, hr) =>
+        _mockIcsExporter.Setup(x => x.ExporteerAsync(momenten, It.IsAny<string>(), 13, Taal.Nederlands))
+            .Callback<IEnumerable<AfvalOphaalMoment>, string, int, Taal>((m, path, hr, t) =>
             {
                 File.WriteAllText(path, "BEGIN:VCALENDAR\nEND:VCALENDAR");
             })
@@ -62,17 +62,44 @@ public class WebDavSyncAdapterTests
         Func<Task> act = () => sut.SynchroniseerAsync(
             momenten, 
             new SyncConfiguratie(SyncProvider.WebDav, "https://dav.test.org/calendar.ics", "user", "pass"), 
-            13);
+            13,
+            Taal.Nederlands);
 
         // Assert
         await act.Should().NotThrowAsync();
-        _mockIcsExporter.Verify(x => x.ExporteerAsync(momenten, It.IsAny<string>(), 13), Times.Once);
+        _mockIcsExporter.Verify(x => x.ExporteerAsync(momenten, It.IsAny<string>(), 13, Taal.Nederlands), Times.Once);
         mockHandler.Protected().Verify(
             "SendAsync",
             Times.Once(),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>()
         );
+    }
+
+    [Fact]
+    public async Task SynchroniseerAsync_MetEngelseTaal_ZouTaalDoorgevenAanExporter()
+    {
+        // Arrange
+        var momenten = new List<AfvalOphaalMoment> { new(AfvalType.GRIJS, DateTime.Now, "Test", "1234AB", "10") };
+        _mockIcsExporter.Setup(x => x.ExporteerAsync(momenten, It.IsAny<string>(), 13, Taal.Engels))
+            .Callback<IEnumerable<AfvalOphaalMoment>, string, int, Taal>((m, path, hr, t) => File.WriteAllText(path, "BEGIN:VCALENDAR"))
+            .Returns(Task.CompletedTask);
+
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage { StatusCode = HttpStatusCode.OK });
+        var sut = new WebDavSyncAdapter(new HttpClient(mockHandler.Object), _mockIcsExporter.Object);
+
+        // Act
+        await sut.SynchroniseerAsync(
+            momenten,
+            new SyncConfiguratie(SyncProvider.WebDav, "https://dav.test.org/calendar.ics", "user", "pass"),
+            13,
+            Taal.Engels);
+
+        // Assert
+        _mockIcsExporter.Verify(x => x.ExporteerAsync(momenten, It.IsAny<string>(), 13, Taal.Engels), Times.Once);
     }
 
     [Fact]
@@ -86,7 +113,8 @@ public class WebDavSyncAdapterTests
         Func<Task> act = () => sut.SynchroniseerAsync(
             new List<AfvalOphaalMoment>(), 
             new SyncConfiguratie(SyncProvider.WebDav, "", "user", "pass"), 
-            13);
+            13,
+            Taal.Nederlands);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>().WithMessage("*WebDAV URL*");
@@ -97,8 +125,8 @@ public class WebDavSyncAdapterTests
     {
         // Arrange
         var momenten = new List<AfvalOphaalMoment>();
-        _mockIcsExporter.Setup(x => x.ExporteerAsync(momenten, It.IsAny<string>(), 13))
-            .Callback<IEnumerable<AfvalOphaalMoment>, string, int>((m, path, hr) =>
+        _mockIcsExporter.Setup(x => x.ExporteerAsync(momenten, It.IsAny<string>(), 13, Taal.Nederlands))
+            .Callback<IEnumerable<AfvalOphaalMoment>, string, int, Taal>((m, path, hr, t) =>
             {
                 File.WriteAllText(path, "TEST CONTENT");
             })
@@ -123,7 +151,8 @@ public class WebDavSyncAdapterTests
         Func<Task> act = () => sut.SynchroniseerAsync(
             momenten, 
             new SyncConfiguratie(SyncProvider.WebDav, "https://dav.test.org/calendar.ics", "wrong", "wrong"), 
-            13);
+            13,
+            Taal.Nederlands);
 
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>();

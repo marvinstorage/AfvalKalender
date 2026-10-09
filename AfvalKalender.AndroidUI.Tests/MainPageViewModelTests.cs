@@ -32,6 +32,20 @@ public class MainPageViewModelTests
     }
 
     [Fact]
+    public async Task VerwerkAsync_ZouGekozenTaalMeegevenInCommand()
+    {
+        _viewModel.Postcode = "1234AB";
+        _viewModel.Huisnummer = "10";
+        _viewModel.GeselecteerdeTaal = Taal.Engels;
+        _handlerMock.Setup(h => h.HandleAsync(It.IsAny<VerwerkKalenderCommand>(), default))
+            .ReturnsAsync(new List<AfvalOphaalMoment>());
+
+        await _viewModel.VerwerkCommand.ExecuteAsync(null);
+
+        _handlerMock.Verify(h => h.HandleAsync(It.Is<VerwerkKalenderCommand>(c => c.Taal == Taal.Engels), default), Times.Once);
+    }
+
+    [Fact]
     public async Task VerwerkAsync_ZouFoutMelden_WanneerGeenDataIngevuld()
     {
         _viewModel.Postcode = "";

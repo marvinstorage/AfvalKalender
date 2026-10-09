@@ -8,5 +8,5 @@ namespace AfvalKalender.Domain.Interfaces;
 public interface IAfvalKalenderSynchronisator
 {
     bool Ondersteunt(SyncProvider provider);
-    Task SynchroniseerAsync(IEnumerable<AfvalOphaalMoment> momenten, SyncConfiguratie configuratie, int herinneringUur);
+    Task SynchroniseerAsync(IEnumerable<AfvalOphaalMoment> momenten, SyncConfiguratie configuratie, int herinneringUur, Taal taal);
 }

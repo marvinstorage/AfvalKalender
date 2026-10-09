@@ -19,7 +19,7 @@ public class MicrosoftGraphSyncAdapter : IAfvalKalenderSynchronisator
 
     public bool Ondersteunt(SyncProvider provider) => provider == SyncProvider.MicrosoftGraph;
 
-    public async Task SynchroniseerAsync(IEnumerable<AfvalOphaalMoment> momenten, SyncConfiguratie configuratie, int herinneringUur)
+    public async Task SynchroniseerAsync(IEnumerable<AfvalOphaalMoment> momenten, SyncConfiguratie configuratie, int herinneringUur, Taal taal)
     {
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configuratie.DoelUrlOfToken);
         // Note: Implementation omitted for demonstration. Here we would map `momenten` to Microsoft Graph JSON

@@ -162,6 +162,7 @@ matching the language of the problem domain and the team.
 | Value Object | Dutch name | Description |
 |---|---|---|
 | `AfvalType` | Afval Type | Enum: `GRIJS`, `GROEN`, `PAPIER`, `VERPAKKINGEN`, `KERSTBOOM`, `ONBEKEND`. |
+| `Taal` | Taal | Enum `Nederlands`, `Engels`; `AfvalTypeVertaling` maps `AfvalType` + `Taal` to the event text. Translation happens at export time; the DB keeps Dutch. |
 | `AfvalVerwerker` | Afval Verwerker | Immutable `record(Id, Naam, CompanyCode)`. `AfvalVerwerkers.Alle` lists all 16 supported providers. |
 
 ### Domain Events
@@ -211,6 +212,7 @@ VerwerkKalenderCommandValidator             ← validates postcode, jaar, GUID, 
 | `SyncDoelUrlOfToken` | `string?` | `null` | WebDAV URL (or token for the cloud providers) |
 | `SyncGebruiker` | `string?` | `null` | Optional basic auth username |
 | `SyncWachtwoord` | `string?` | `null` | Optional basic auth password |
+| `Taal` | `Taal` | `Nederlands` | Language of ICS summary/alarm: `Nederlands` or `Engels` (ADR-011) |
 
 ### Core workflow (`VerwerkKalenderCommandHandler.HandleAsync`)
 
@@ -249,7 +251,7 @@ sequenceDiagram
     Note over DB: Domain events → OutboxMessages (atomisch)
     DB-->>App: Opgeslagen
     DB-->>App: Persisteerde momenten
-    App->>ICS: ExporteerAsync(momenten, outputPad, herinneringUur)
+    App->>ICS: ExporteerAsync(momenten, outputPad, herinneringUur, taal)
     ICS-->>App: .ics bestand aangemaakt
     opt WebDAV Url is present
         App->>SyncAdapter: SynchroniseerAsync()

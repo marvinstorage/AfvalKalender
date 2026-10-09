@@ -2,6 +2,7 @@
 
 ## Purpose
 Android-only (.NET MAUI) decisions and behaviour. This is the only platform-specific spec; the others are platform-neutral.
+
 ## Requirements
 
 ### Requirement: Packaging
@@ -38,3 +39,10 @@ After success the UI SHALL show an "ICS Bestand Delen" button that opens the And
 #### Scenario: Share
 - **WHEN** the user taps the button with a result available
 - **THEN** a ShareFileRequest for the file is made
+
+### Requirement: Language selector
+The Android view model SHALL expose the same language list and default as the Desktop view model and put the selection in the command.
+
+#### Scenario: Command contains language
+- **WHEN** the user processes with Engels selected
+- **THEN** the command has Taal Engels
