@@ -33,7 +33,6 @@ dotnet publish -c Release -r linux-x64 --self-contained
 dotnet build-server shutdown && dotnet publish AfvalKalender.AndroidUI \
   -c Release \
   -f net10.0-android \
-  -p:RuntimeIdentifiers="android-arm64;android-x64" \
   -p:AndroidPackageFormat=apk \
   -p:SkipUsingBuiltInWorkloads=true \
   -p:NoWarn=NU1605 \
