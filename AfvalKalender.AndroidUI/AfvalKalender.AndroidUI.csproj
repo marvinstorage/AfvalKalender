@@ -29,7 +29,11 @@
         <PackageReference Include="Ical.Net" Version="5.2.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" /> 
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+        <!-- Infrastructure pins this package for security fixes (#17). It only ships Linux (glibc) natives;
+             NuGet falls back from android-* to linux-x64 and packages a libe_sqlite3.so that cannot load
+             on Android. Exclude its natives so the Android build uses its own SQLite library. -->
+        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.13" ExcludeAssets="native" />
     </ItemGroup>
 
     <ItemGroup>
