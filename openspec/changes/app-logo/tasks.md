@@ -1,7 +1,7 @@
 ## 1. Assets
 
-- [x] 1.1 Add `assets/logo.svg`
-- [x] 1.2 Generate `AfvalKalender.DesktopUI/Assets/app-logo.ico` from the SVG and remove the Avalonia placeholder icon
+- [x] 1.1 Add the logo artwork under `assets/` (`logo-source.jpg`, `logo.png`, `logo-256.png`, `logo-foreground.png`) and `scripts/make-logo-icons.py`
+- [x] 1.2 Generate `AfvalKalender.DesktopUI/Assets/app-logo.ico` from the logo and remove the Avalonia placeholder icon
 
 ## 2. Android
 

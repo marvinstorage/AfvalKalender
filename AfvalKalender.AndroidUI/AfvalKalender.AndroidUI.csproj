@@ -15,8 +15,8 @@
 
         <ApplicationId>com.companyname.afvalkalender</ApplicationId>
 
-        <ApplicationVersion>2</ApplicationVersion>
-        <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+        <ApplicationVersion>3</ApplicationVersion>
+        <ApplicationDisplayVersion>1.2.2</ApplicationDisplayVersion>
 
         <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
     </PropertyGroup>
@@ -37,8 +37,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- App icon: MAUI renders the shared logo into all launcher densities (adaptive icon). -->
-        <MauiIcon Include="..\assets\logo.svg" Link="Resources\AppIcon\appicon.svg" Color="#2E7D32" ForegroundScale="0.65" />
+        <!-- App icon: MAUI scales the logo artwork (transparent PNG) into all launcher densities (adaptive icon). -->
+        <MauiIcon Include="..\assets\logo-foreground.png" Link="Resources\AppIcon\appicon.png" Color="#FFFFFF" ForegroundScale="0.8" />
     </ItemGroup>
 
     <ItemGroup>

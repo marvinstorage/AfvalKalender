@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo.svg" alt="AfvalKalender logo" width="96" height="96">
+<img src="assets/logo.png" alt="AfvalKalender logo" width="96" height="96">
 
 # AfvalKalender
 
