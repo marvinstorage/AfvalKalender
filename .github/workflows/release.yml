@@ -85,7 +85,7 @@ jobs:
           fi
           cp "$APK" "dist/AfvalKalender-v${{ steps.ver.outputs.display }}-android.apk"
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: android-apk
           path: dist/*.apk
@@ -126,7 +126,7 @@ jobs:
           test -x "/usr/bin/afvalkalender-${{ matrix.variant }}"
           dpkg -c dist/*.deb | head -n 20
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: deb-${{ matrix.variant }}
           path: dist/*.deb
@@ -159,7 +159,7 @@ jobs:
           mkdir -p dist
           (cd "publish/${{ matrix.variant }}" && zip -r -q "$GITHUB_WORKSPACE/dist/AfvalKalender-${{ matrix.variant }}-v${V}-win-x64.zip" .)
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: windows-${{ matrix.variant }}
           path: dist/*.zip
@@ -175,7 +175,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
