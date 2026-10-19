@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
     <PackageReference Include="Spectre.Console" Version="0.57.2" />
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.13" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.14" />
   </ItemGroup>
 
   <PropertyGroup>
